@@ -1,0 +1,9 @@
+﻿@{
+    Layout = "/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="auth-wrapper">
+    @RenderBody()
+</div>
+
+@await RenderSectionAsync("Scripts", required: false)

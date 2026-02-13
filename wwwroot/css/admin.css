@@ -1,0 +1,32 @@
+﻿/* Make sidebar icons more visible */
+.nav-sidebar .nav-icon {
+    margin-right: 0.5rem;
+}
+
+/* Active menu item */
+.nav-sidebar .nav-link.active {
+    background-color: #007bff !important;
+}
+
+/* User panel styling */
+.user-panel .info small {
+    display: block;
+    margin-top: 2px;
+}
+
+/* Custom button colors */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* Card shadows */
+.card {
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+}
+
+/* Small box hover effect */
+.small-box:hover {
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}

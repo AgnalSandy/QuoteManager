@@ -1,0 +1,332 @@
+﻿@page
+@model QuoteManager.Pages.Client.DashboardModel
+@{
+    ViewData["Title"] = "My Dashboard";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Client Dashboard</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/">Home</a></li>
+                        <li class="breadcrumb-item active">Dashboard</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <!-- Welcome Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-user-circle"></i> @Model.WelcomeMessage
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="lead">Welcome to your QuoteManager dashboard. Track your quotes and manage your account.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote Statistics Cards -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3>@Model.TotalQuotes</h3>
+                            <p>Total Quotes</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3>@Model.PendingQuotes</h3>
+                            <p>Pending</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3>@Model.AcceptedQuotes</h3>
+                            <p>Accepted</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3>@Model.RejectedQuotes</h3>
+                            <p>Rejected</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- My Quotes List -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-list"></i> Recent Quotes
+                            </h3>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (Model.MyQuotes.Any())
+                            {
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var quote in Model.MyQuotes)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <strong>@quote.Title</strong>
+                                                    @if (!string.IsNullOrEmpty(quote.Description))
+                                                    {
+                                                        <br />
+
+                                                        <small class="text-muted">@quote.Description</small>
+                                                    }
+                                                </td>
+                                                <td><strong>@quote.Amount.ToString("C")</strong></td>
+                                                <td>
+                                                    @if (quote.Status == "Pending")
+                                                    {
+                                                        <span class="badge badge-warning">
+                                                            <i class="fas fa-clock"></i> Pending
+                                                        </span>
+                                                    }
+                                                    else if (quote.Status == "Accepted")
+                                                    {
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-check"></i> Accepted
+                                                        </span>
+                                                    }
+                                                    else if (quote.Status == "Rejected")
+                                                    {
+                                                        <span class="badge badge-danger">
+                                                            <i class="fas fa-times"></i> Rejected
+                                                        </span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <small>@quote.CreatedDate.ToLocalTime().ToString("MMM dd, yyyy")</small>
+                                                </td>
+                                                <td>
+                                                    <a href="#" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <div class="p-3 text-center text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p>No quotes yet. Contact your account manager to request a quote.</p>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.MyQuotes.Any())
+                        {
+                            <div class="card-footer">
+                                <a href="#" class="btn btn-primary">
+                                    <i class="fas fa-list"></i> View All Quotes
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Support Team & Stats -->
+                <div class="col-md-4">
+                    <!-- Quote Value Card -->
+                    <div class="card card-widget widget-user-2">
+                        <div class="widget-user-header bg-warning">
+                            <h3 class="widget-user-username">Quote Values</h3>
+                            <h5 class="widget-user-desc">Financial Overview</h5>
+                        </div>
+                        <div class="card-footer p-0">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <span class="nav-link">
+                                        Total Quote Value
+                                        <span class="float-right badge bg-primary">
+                                            @Model.TotalQuoteValue.ToString("C")
+                                        </span>
+                                    </span>
+                                </li>
+                                <li class="nav-item">
+                                    <span class="nav-link">
+                                        Accepted Value
+                                        <span class="float-right badge bg-success">
+                                            @Model.AcceptedValue.ToString("C")
+                                        </span>
+                                    </span>
+                                </li>
+                                <li class="nav-item">
+                                    <span class="nav-link">
+                                        Pending Value
+                                        <span class="float-right badge bg-warning">
+                                            @Model.PendingValue.ToString("C")
+                                        </span>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Support Team Card -->
+                    <div class="card card-success">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-headset"></i> Your Support Team
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.HasAssignedStaff && Model.AssignedStaff != null)
+                            {
+                                <h5><strong>Account Manager:</strong></h5>
+                                <div class="info-box bg-light">
+                                    <span class="info-box-icon bg-success">
+                                        <i class="fas fa-user-tie"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">@Model.AssignedStaff.FullName</span>
+                                        <span class="info-box-number">
+                                            <small>
+                                                <i class="fas fa-envelope"></i>
+                                                <a href="mailto:@Model.AssignedStaff.Email">@Model.AssignedStaff.Email</a>
+                                            </small>
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(Model.AssignedStaff.PhoneNumber))
+                                        {
+                                            <span class="info-box-number">
+                                                <small>
+                                                    <i class="fas fa-phone"></i> @Model.AssignedStaff.PhoneNumber
+                                                </small>
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+
+                                @if (Model.SupervisingAdmin != null)
+                                {
+                                    <hr />
+                                    <h5><strong>Supervisor:</strong></h5>
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-warning">
+                                            <i class="fas fa-user-shield"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">@Model.SupervisingAdmin.FullName</span>
+                                            <span class="info-box-number">
+                                                <small>
+                                                    <i class="fas fa-envelope"></i>
+                                                    <a href="mailto:@Model.SupervisingAdmin.Email">@Model.SupervisingAdmin.Email</a>
+                                                </small>
+                                            </span>
+                                            <span class="progress-description">
+                                                <small class="text-muted">Contact if you have issues</small>
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>No Account Manager Assigned</strong>
+                                    <p>Please contact support.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Quick Actions
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <a href="#" class="btn btn-app bg-success">
+                                        <i class="fas fa-plus"></i> Request Quote
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="#" class="btn btn-app bg-info">
+                                        <i class="fas fa-list"></i> All Quotes
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="mailto:@Model.AssignedStaff?.Email" class="btn btn-app bg-warning">
+                                        <i class="fas fa-envelope"></i> Contact Support
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="/Identity/Account/Manage" class="btn btn-app bg-primary">
+                                        <i class="fas fa-user-edit"></i> Edit Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>

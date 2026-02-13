@@ -1,0 +1,339 @@
+﻿@page
+@model QuoteManager.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/">Home</a></li>
+                        <li class="breadcrumb-item active">Dashboard</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            <!-- Welcome Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-body">
+                            <h4><i class="fas fa-user-shield"></i> @Model.WelcomeMessage</h4>
+                            <p class="mb-0">
+                                <strong>Role:</strong> <span class="badge badge-primary">@Model.CurrentUserRole</span> |
+                                <strong>@Model.CountDescription</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Statistics Row -->
+            <div class="row">
+                <!-- Users Card -->
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-info">
+                        <div class="inner">
+                            <h3>@Model.TotalUsersCount</h3>
+                            <p>
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <text>Total Users</text>
+                                }
+                                else if (User.IsInRole("Admin"))
+                                {
+                                    <text>Team Members</text>
+                                }
+                                else
+                                {
+                                    <text>My Clients</text>
+                                }
+                            </p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <a href="/Users/Index" class="small-box-footer">
+                            View Users <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quotes Card -->
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-success">
+                        <div class="inner">
+                            <h3>@Model.TotalQuotes</h3>
+                            <p>
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <text>Total Quotes</text>
+                                }
+                                else if (User.IsInRole("Admin"))
+                                {
+                                    <text>Team Quotes</text>
+                                }
+                                else
+                                {
+                                    <text>My Quotes</text>
+                                }
+                            </p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <a href="#" class="small-box-footer">
+                            View Quotes <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Revenue Card -->
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3>@Model.TotalRevenue.ToString("C")</h3>
+                            <p>Total Revenue</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <a href="#" class="small-box-footer">
+                            View Details <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Average Quote Card -->
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-danger">
+                        <div class="inner">
+                            <h3>@Model.AverageQuoteValue.ToString("C")</h3>
+                            <p>Average Quote</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <a href="#" class="small-box-footer">
+                            Analysis <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Breakdown (if SuperAdmin or Admin) -->
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+            {
+                <div class="row">
+                    @if (User.IsInRole("SuperAdmin"))
+                    {
+                        <div class="col-lg-3 col-6">
+                            <div class="info-box bg-danger">
+                                <span class="info-box-icon"><i class="fas fa-user-shield"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Administrators</span>
+                                    <span class="info-box-number">@Model.AdminCount</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                    {
+                        <div class="col-lg-3 col-6">
+                            <div class="info-box bg-success">
+                                <span class="info-box-icon"><i class="fas fa-user-tie"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">
+                                        @(User.IsInRole("SuperAdmin") ? "Staff Members" : "My Staff")
+                                    </span>
+                                    <span class="info-box-number">@Model.StaffCount</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-lg-3 col-6">
+                        <div class="info-box bg-warning">
+                            <span class="info-box-icon"><i class="fas fa-user"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">
+                                    @(User.IsInRole("SuperAdmin") ? "Total Clients" : "Team Clients")
+                                </span>
+                                <span class="info-box-number">@Model.ClientCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Quote Statistics -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-chart-pie"></i> Quote Status Breakdown
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="description-block border-right">
+                                        <span class="description-percentage text-warning">
+                                            <i class="fas fa-clock"></i>
+                                        </span>
+                                        <h5 class="description-header">@Model.PendingQuotes</h5>
+                                        <span class="description-text">Pending Quotes</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="description-block">
+                                        <span class="description-percentage text-success">
+                                            <i class="fas fa-check-circle"></i>
+                                        </span>
+                                        <h5 class="description-header">@Model.AcceptedQuotes</h5>
+                                        <span class="description-text">Accepted Quotes</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="description-block">
+                                        <span class="description-percentage text-danger">
+                                            <i class="fas fa-times-circle"></i>
+                                        </span>
+                                        <h5 class="description-header">@Model.RejectedQuotes</h5>
+                                        <span class="description-text">Rejected Quotes</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Breakdown -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-dollar-sign"></i> Revenue Breakdown
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="progress-group">
+                                        <span class="progress-text">Total Revenue</span>
+                                        <span class="float-right"><b>@Model.TotalRevenue.ToString("C")</b></span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="progress-group">
+                                        <span class="progress-text">Accepted Revenue</span>
+                                        <span class="float-right">
+                                            <b>@Model.AcceptedRevenue.ToString("C")</b> / @Model.TotalRevenue.ToString("C")
+                                        </span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-success"
+                                                 style="width: @((Model.TotalRevenue > 0 ? (Model.AcceptedRevenue / Model.TotalRevenue * 100) : 0).ToString("F0"))%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="progress-group">
+                                        <span class="progress-text">Pending Revenue</span>
+                                        <span class="float-right">
+                                            <b>@Model.PendingRevenue.ToString("C")</b> / @Model.TotalRevenue.ToString("C")
+                                        </span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-warning"
+                                                 style="width: @((Model.TotalRevenue > 0 ? (Model.PendingRevenue / Model.TotalRevenue * 100) : 0).ToString("F0"))%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="progress-group">
+                                        <span class="progress-text">Rejected Revenue</span>
+                                        <span class="float-right">
+                                            <b>@Model.RejectedRevenue.ToString("C")</b> / @Model.TotalRevenue.ToString("C")
+                                        </span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-danger"
+                                                 style="width: @((Model.TotalRevenue > 0 ? (Model.RejectedRevenue / Model.TotalRevenue * 100) : 0).ToString("F0"))%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> Summary
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong><i class="fas fa-users mr-1"></i> Users</strong>
+                                    <p class="text-muted">
+                                        @if (User.IsInRole("SuperAdmin"))
+                                        {
+                                            <text>Managing @Model.TotalUsersCount users across the system</text>
+                                        }
+                                        else if (User.IsInRole("Admin"))
+                                        {
+                                            <text>@Model.StaffCount staff managing @Model.ClientCount clients</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Managing @Model.ClientCount clients</text>
+                                        }
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong><i class="fas fa-file-invoice-dollar mr-1"></i> Quotes</strong>
+                                    <p class="text-muted">
+                                        @Model.TotalQuotes total quotes: @Model.PendingQuotes pending,
+                                        @Model.AcceptedQuotes accepted, @Model.RejectedQuotes rejected
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong><i class="fas fa-dollar-sign mr-1"></i> Performance</strong>
+                                    <p class="text-muted">
+                                        Average quote value of @Model.AverageQuoteValue.ToString("C")
+                                        with @((Model.TotalQuotes > 0 ? (Model.AcceptedQuotes * 100.0 / Model.TotalQuotes) : 0).ToString("F1"))% acceptance rate
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>
