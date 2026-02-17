@@ -1,0 +1,104 @@
+﻿@page
+@model QuoteManager.Pages.Quotes.DeleteModel
+@{
+    ViewData["Title"] = "Delete Quote";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Delete Quote</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="Index">Quotes</a></li>
+                    <li class="breadcrumb-item active">Delete</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+
+                <!-- Warning Alert -->
+                <div class="alert alert-danger">
+                    <h5><i class="icon fas fa-ban"></i> Warning!</h5>
+                    Are you sure you want to delete this quote? This action cannot be undone.
+                </div>
+
+                <!-- Quote Details -->
+                <div class="card card-danger">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-trash"></i> Quote to be Deleted
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Quote #</dt>
+                            <dd class="col-sm-8">
+                                <strong>@Model.Quote.QuoteNumber</strong>
+                                <br /><small class="text-muted">ID: @Model.Quote.Id</small>
+                            </dd>
+
+                            <dt class="col-sm-4">Title</dt>
+                            <dd class="col-sm-8"><strong>@Model.Quote.Title</strong></dd>
+
+                            <dt class="col-sm-4">Client</dt>
+                            <dd class="col-sm-8">@Model.Quote.Client.FullName</dd>
+
+                            <dt class="col-sm-4">Amount</dt>
+                            <dd class="col-sm-8">
+                                <strong class="text-success">@Model.Quote.Amount.ToString("C")</strong>
+                            </dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                                {
+                                    <span class="badge badge-warning">Pending</span>
+                                }
+                                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Accepted)
+                                {
+                                    <span class="badge badge-success">Accepted</span>
+                                }
+                                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Rejected)
+                                {
+                                    <span class="badge badge-danger">Rejected</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Created Date</dt>
+                            <dd class="col-sm-8">@Model.Quote.CreatedDate.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Created By</dt>
+                            <dd class="col-sm-8">@Model.Quote.CreatedBy.FullName</dd>
+                        </dl>
+                    </div>
+                    <div class="card-footer">
+                        <form method="post">
+                            <input type="hidden" asp-for="Quote.Id" />
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Yes, Delete Quote
+                            </button>
+                            <a asp-page="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <a asp-page="Details" asp-route-id="@Model.Quote.Id" class="btn btn-info float-right">
+                                <i class="fas fa-eye"></i> View Details First
+                            </a>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

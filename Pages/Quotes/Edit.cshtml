@@ -1,0 +1,148 @@
+﻿@page
+@model QuoteManager.Pages.Quotes.EditModel
+@{
+    ViewData["Title"] = "Edit Quote";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Edit Quote #@Model.Quote.Id</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="Index">Quotes</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card card-warning">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-edit"></i> Update Quote Information
+                        </h3>
+                    </div>
+
+                    <form method="post">
+                        <div class="card-body">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                            <input type="hidden" asp-for="Quote.Id" />
+                            <input type="hidden" asp-for="Quote.QuoteNumber" />
+                            <input type="hidden" asp-for="Quote.ClientId" />
+                            <input type="hidden" asp-for="Quote.CreatedById" />
+                            <input type="hidden" asp-for="Quote.CreatedDate" />
+
+                            <!-- Read-Only Info -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Quote Number</label>
+                                        <input type="text" class="form-control" value="@Model.Quote.QuoteNumber" readonly disabled />
+                                        <small class="form-text text-muted">Auto-generated</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Client</label>
+                                        <input type="text" class="form-control" value="@Model.ClientName" readonly disabled />
+                                        <small class="form-text text-muted">Cannot be changed</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Created By</label>
+                                        <input type="text" class="form-control" value="@Model.CreatedByName" readonly disabled />
+                                        <small class="form-text text-muted">@Model.Quote.CreatedDate.ToString("MMM dd, yyyy")</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <!-- Quote Title -->
+                            <div class="form-group">
+                                <label asp-for="Quote.Title" class="required"></label>
+                                <input asp-for="Quote.Title" class="form-control" />
+                                <span asp-validation-for="Quote.Title" class="text-danger"></span>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="form-group">
+                                <label asp-for="Quote.Description"></label>
+                                <textarea asp-for="Quote.Description" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Quote.Description" class="text-danger"></span>
+                            </div>
+
+                            <!-- Amount and Status -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Quote.Amount" class="required"></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-dollar-sign"></i>
+                                                </span>
+                                            </div>
+                                            <input asp-for="Quote.Amount" class="form-control" type="number" step="0.01" />
+                                        </div>
+                                        <span asp-validation-for="Quote.Amount" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Quote.Status"></label>
+                                        <select asp-for="Quote.Status" asp-items="Model.StatusList" class="form-control">
+                                        </select>
+                                        <span asp-validation-for="Quote.Status" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Valid Until -->
+                            <div class="form-group">
+                                <label asp-for="Quote.ValidUntil"></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-calendar"></i>
+                                        </span>
+                                    </div>
+                                    <input asp-for="Quote.ValidUntil" class="form-control" type="date" />
+                                </div>
+                                <span asp-validation-for="Quote.ValidUntil" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Update Quote
+                            </button>
+                            <a asp-page="Index" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <a asp-page="Details" asp-route-id="@Model.Quote.Id" class="btn btn-info float-right">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

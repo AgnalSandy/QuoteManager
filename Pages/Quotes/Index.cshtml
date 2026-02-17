@@ -1,0 +1,222 @@
+﻿@page
+@model QuoteManager.Pages.Quotes.IndexModel
+@{
+    ViewData["Title"] = "Quotes Management";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Quotes Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <div class="float-right">
+                    @if (!User.IsInRole("Client"))
+                    {
+                        <a asp-page="Create" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create New Quote
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filters Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-filter"></i> Filters
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select name="StatusFilter" class="form-control" onchange="this.form.submit()">
+                                    <!option value="All" @(Model.StatusFilter == "All" || string.IsNullOrEmpty(Model.StatusFilter) ? "selected" : "")>All Status</!option>
+                                    <!option value="Pending" @(Model.StatusFilter == "Pending" ? "selected" : "")>Pending</!option>
+                                    <!option value="Accepted" @(Model.StatusFilter == "Accepted" ? "selected" : "")>Accepted</!option>
+                                    <!option value="Rejected" @(Model.StatusFilter == "Rejected" ? "selected" : "")>Rejected</!option>
+                                    <!option value="Expired" @(Model.StatusFilter == "Expired" ? "selected" : "")>Expired</!option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Search</label>
+                                <input type="text" name="SearchTerm" class="form-control"
+                                       placeholder="Search by title, description, or client..."
+                                       value="@Model.SearchTerm">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-info btn-block">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quotes Table Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-file-alt"></i>
+                    @if (User.IsInRole("Client"))
+                    {
+                        <span>My Quotes</span>
+                    }
+                    else
+                    {
+                        <span>All Quotes (@Model.Quotes.Count)</span>
+                    }
+                </h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                @if (Model.Quotes.Any())
+                {
+                    <table class="table table-hover text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Quote #</th>
+                                <th>Title</th>
+                                <th>Client</th>
+                                @if (!User.IsInRole("Client"))
+                                {
+                                    <th>Created By</th>
+                                }
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th>Valid Until</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var quote in Model.Quotes)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@quote.QuoteNumber</strong>
+                                        <br /><small class="text-muted">ID: @quote.Id</small>
+                                    </td>
+                                    <td>
+                                        <strong>@quote.Title</strong>
+                                        @if (!string.IsNullOrEmpty(quote.Description))
+                                        {
+                                            <br />
+                                            <small class="text-muted">@(quote.Description.Length > 50 ? quote.Description.Substring(0, 50) + "..." : quote.Description)</small>
+                                        }
+                                    </td>
+                                    <td>@quote.Client.FullName</td>
+                                    @if (!User.IsInRole("Client"))
+                                    {
+                                        <td>@quote.CreatedBy.FullName</td>
+                                    }
+                                    <td>
+                                        <strong>@quote.Amount.ToString("C")</strong>
+                                    </td>
+                                    <td>
+                                        @if (quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                                        {
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-clock"></i> Pending
+                                            </span>
+                                        }
+                                        else if (quote.Status == QuoteManager.Models.QuoteStatus.Accepted)
+                                        {
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-check"></i> Accepted
+                                            </span>
+                                        }
+                                        else if (quote.Status == QuoteManager.Models.QuoteStatus.Rejected)
+                                        {
+                                            <span class="badge badge-danger">
+                                                <i class="fas fa-times"></i> Rejected
+                                            </span>
+                                        }
+                                        else if (quote.Status == QuoteManager.Models.QuoteStatus.Expired)
+                                        {
+                                            <span class="badge badge-secondary">
+                                                <i class="fas fa-ban"></i> Expired
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>@quote.CreatedDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        @if (quote.ValidUntil.HasValue)
+                                        {
+                                            <span>@quote.ValidUntil.Value.ToString("MMM dd, yyyy")</span>
+                                            @if (quote.ValidUntil < DateTime.UtcNow && quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                                            {
+                                                <br />
+                                                <small class="text-danger">
+                                                    <i class="fas fa-exclamation-triangle"></i> Expired
+                                                </small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No expiry</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a asp-page="Details" asp-route-id="@quote.Id" class="btn btn-sm btn-info" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            @if (!User.IsInRole("Client"))
+                                            {
+                                                <a asp-page="Edit" asp-route-id="@quote.Id" class="btn btn-sm btn-warning" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a asp-page="Delete" asp-route-id="@quote.Id" class="btn btn-sm btn-danger" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            }
+
+                                            @if (User.IsInRole("Client") && quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                                            {
+                                                <a asp-page="ClientAction" asp-route-id="@quote.Id" class="btn btn-sm btn-success" title="Accept/Reject">
+                                                    <i class="fas fa-check-circle"></i> Respond
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="p-4 text-center">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">
+                            @if (User.IsInRole("Client"))
+                            {
+                                <span>You don't have any quotes yet. Your account manager will create quotes for you.</span>
+                            }
+                            else
+                            {
+                                <span>No quotes found. Click "Create New Quote" to get started.</span>
+                            }
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

@@ -168,14 +168,13 @@
                 </nav>
 
 
-                        <!-- Quotes -->
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-file-alt"></i>
-                                <p>Quotes</p>
-                            </a>
-                        </li>
-
+                <!-- Quotes -->
+                <li class="nav-item">
+                    <a asp-page="/Quotes/Index" class="nav-link">
+                        <i class="nav-icon fas fa-file-alt"></i>
+                        <p>Quotes</p>
+                    </a>
+                </li>
                         <!-- Reports (Admin & SuperAdmin only) -->
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                         {

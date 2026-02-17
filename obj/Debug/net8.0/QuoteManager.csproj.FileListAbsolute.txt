@@ -283,3 +283,4 @@ D:\Internship\QM\QuoteManager\QuoteManager\bin\Debug\net8.0\runtimes\win-arm\nat
 D:\Internship\QM\QuoteManager\QuoteManager\bin\Debug\net8.0\runtimes\win-arm64\native\e_sqlite3.dll
 D:\Internship\QM\QuoteManager\QuoteManager\bin\Debug\net8.0\runtimes\win-x64\native\e_sqlite3.dll
 D:\Internship\QM\QuoteManager\QuoteManager\bin\Debug\net8.0\runtimes\win-x86\native\e_sqlite3.dll
+D:\Internship\QM\QuoteManager\QuoteManager\obj\Debug\net8.0\QuoteManager.sourcelink.json
