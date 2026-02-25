@@ -38,6 +38,21 @@ namespace QuoteManager.Pages.Quotes
 
         public async Task<IActionResult> OnPostAsync()
         {
+
+
+
+            // Remove validation for auto-generated fields
+            ModelState.Remove("Quote.QuoteNumber");
+            ModelState.Remove("Quote.CreatedById");
+            ModelState.Remove("Quote.CreatedDate");
+            ModelState.Remove("Quote.Status");
+            ModelState.Remove("Quote.Client");  // Navigation property
+            ModelState.Remove("Quote.CreatedBy");  // Navigation property
+
+
+
+
+
             if (!ModelState.IsValid)
             {
                 await LoadClientsDropdown();

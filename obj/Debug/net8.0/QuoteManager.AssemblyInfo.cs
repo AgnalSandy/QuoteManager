@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QuoteManager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f8d1b258dc7cce6db5f67523aee2cc01c37aca69")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a9919258fd696a05ac9d9d329ed64cdfb4c6c107")]
 [assembly: System.Reflection.AssemblyProductAttribute("QuoteManager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QuoteManager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

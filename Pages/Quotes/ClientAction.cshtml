@@ -73,27 +73,29 @@
                     <div class="card-body text-center">
                         <h5 class="mb-4">What would you like to do with this quote?</h5>
 
-                        <form method="post">
-                            <input type="hidden" asp-for="Quote.Id" />
-
-                            <button type="submit" asp-page-handler="Accept" class="btn btn-success btn-lg mr-3">
+                        <!-- SEPARATE FORM FOR ACCEPT -->
+                        <form method="post" asp-page-handler="Accept" asp-route-id="@Model.Quote.Id" style="display: inline;">
+                            <button type="submit" class="btn btn-success btn-lg mr-3" onclick="return confirm('Are you sure you want to ACCEPT this quote?');">
                                 <i class="fas fa-check-circle"></i> Accept Quote
                             </button>
+                        </form>
 
-                            <button type="submit" asp-page-handler="Reject" class="btn btn-danger btn-lg">
+                        <!-- SEPARATE FORM FOR REJECT -->
+                        <form method="post" asp-page-handler="Reject" asp-route-id="@Model.Quote.Id" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Are you sure you want to REJECT this quote?');">
                                 <i class="fas fa-times-circle"></i> Reject Quote
                             </button>
-
-                            <hr />
-
-                            <a asp-page="Index" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to Quotes
-                            </a>
-
-                            <a asp-page="Details" asp-route-id="@Model.Quote.Id" class="btn btn-info">
-                                <i class="fas fa-eye"></i> View Full Details
-                            </a>
                         </form>
+
+                        <hr />
+
+                        <a asp-page="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Quotes
+                        </a>
+
+                        <a asp-page="Details" asp-route-id="@Model.Quote.Id" class="btn btn-info">
+                            <i class="fas fa-eye"></i> View Full Details
+                        </a>
                     </div>
                 </div>
 
@@ -101,19 +103,3 @@
         </div>
     </div>
 </section>
-
-@section Scripts {
-    <script>
-        // Confirmation dialogs
-        document.querySelectorAll('button[type="submit"]').forEach(button => {
-            button.addEventListener('click', function (e) {
-                const handler = this.getAttribute('formaction') || this.getAttribute('asp-page-handler');
-                const action = handler && handler.includes('Reject') ? 'reject' : 'accept';
-
-                if (!confirm(`Are you sure you want to ${action} this quote?`)) {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
-}

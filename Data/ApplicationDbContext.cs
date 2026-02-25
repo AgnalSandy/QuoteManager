@@ -35,7 +35,6 @@ namespace QuoteManager.Data
                 .HasOne(q => q.Client)
                 .WithMany()
                 .HasForeignKey(q => q.ClientId)
-                .OnDelete(DeleteBehavior.Restrict);
-        }
+                .OnDelete(DeleteBehavior.Restrict);        }
     }
     }
