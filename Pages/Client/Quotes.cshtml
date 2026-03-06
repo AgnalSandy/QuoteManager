@@ -1,0 +1,184 @@
+@page
+@model QuoteManager.Pages.Client.QuotesModel
+@{
+    ViewData["Title"] = "My Quotes";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-file-invoice"></i> My Quotes</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a asp-page="/Client/Dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active">My Quotes</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                </div>
+            }
+
+            <!-- Filter Tabs -->
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link @(Model.StatusFilter == "All" || string.IsNullOrEmpty(Model.StatusFilter) ? "active" : "")" 
+                               asp-page="/Client/Quotes" asp-route-statusFilter="All">
+                                All (@Model.AllCount)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(Model.StatusFilter == "Pending" ? "active" : "")" 
+                               asp-page="/Client/Quotes" asp-route-statusFilter="Pending">
+                                <i class="fas fa-clock"></i> Pending (@Model.PendingCount)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(Model.StatusFilter == "Accepted" ? "active" : "")" 
+                               asp-page="/Client/Quotes" asp-route-statusFilter="Accepted">
+                                <i class="fas fa-check"></i> Accepted (@Model.AcceptedCount)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(Model.StatusFilter == "Rejected" ? "active" : "")" 
+                               asp-page="/Client/Quotes" asp-route-statusFilter="Rejected">
+                                <i class="fas fa-times"></i> Rejected (@Model.RejectedCount)
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quotes List -->
+            @if (Model.Quotes.Any())
+            {
+                <div class="row">
+                    @foreach (var quote in Model.Quotes)
+                    {
+                        <div class="col-md-6">
+                            <div class="card @(quote.Status == QuoteManager.Constants.QuoteStatus.Pending ? "card-warning" : quote.Status == QuoteManager.Constants.QuoteStatus.Accepted ? "card-success" : quote.Status == QuoteManager.Constants.QuoteStatus.Rejected ? "card-danger" : "card-default") card-outline">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <strong>@quote.QuoteNumber</strong> - @quote.Title
+                                    </h3>
+                                    <div class="card-tools">
+                                        @if (quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
+                                        {
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-clock"></i> Pending
+                                            </span>
+                                        }
+                                        else if (quote.Status == QuoteManager.Constants.QuoteStatus.Accepted)
+                                        {
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-check"></i> Accepted
+                                            </span>
+                                        }
+                                        else if (quote.Status == QuoteManager.Constants.QuoteStatus.Rejected)
+                                        {
+                                            <span class="badge badge-danger">
+                                                <i class="fas fa-times"></i> Rejected
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">Description:</dt>
+                                        <dd class="col-sm-8">@(quote.Description ?? "No description")</dd>
+
+                                        <dt class="col-sm-4">Amount:</dt>
+                                        <dd class="col-sm-8">
+                                            <strong class="text-success">₹@quote.GrandTotal.ToString("N2")</strong>
+                                        </dd>
+
+                                        <dt class="col-sm-4">Created:</dt>
+                                        <dd class="col-sm-8">@quote.CreatedDate.ToString("MMM dd, yyyy")</dd>
+
+                                        @if (quote.ValidUntil.HasValue)
+                                        {
+                                            <dt class="col-sm-4">Valid Until:</dt>
+                                            <dd class="col-sm-8">
+                                                @quote.ValidUntil.Value.ToString("MMM dd, yyyy")
+                                                @if (quote.ValidUntil < DateTime.UtcNow && quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
+                                                {
+                                                    <span class="badge badge-danger">Expired</span>
+                                                }
+                                            </dd>
+                                        }
+
+                                        <dt class="col-sm-4">Created By:</dt>
+                                        <dd class="col-sm-8">@(quote.CreatedBy?.FullName ?? "N/A")</dd>
+                                    </dl>
+                                </div>
+                                <div class="card-footer">
+                                    <a asp-page="/Quotes/Details" asp-route-id="@quote.Id" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+
+                                    @if (quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
+                                    {
+                                        <a asp-page="/Quotes/ClientAction" asp-route-id="@quote.Id" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check-circle"></i> Accept / Reject
+                                        </a>
+                                    }
+
+                                    @if (quote.Status == QuoteManager.Constants.QuoteStatus.Accepted)
+                                    {
+                                        <span class="text-muted"><i class="fas fa-info-circle"></i> Invoice may be generated by your account manager</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No quotes found</h4>
+                        <p class="text-muted">
+                            @if (Model.StatusFilter == "Pending")
+                            {
+                                <text>You don't have any pending quotes.</text>
+                            }
+                            else if (Model.StatusFilter == "Accepted")
+                            {
+                                <text>You haven't accepted any quotes yet.</text>
+                            }
+                            else if (Model.StatusFilter == "Rejected")
+                            {
+                                <text>You haven't rejected any quotes.</text>
+                            }
+                            else
+                            {
+                                <text>Your account manager will create quotes for you.</text>
+                            }
+                        </p>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </section>
+</div>

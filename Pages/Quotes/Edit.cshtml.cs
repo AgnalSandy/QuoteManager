@@ -1,35 +1,30 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using QuoteManager.Constants;
 using QuoteManager.Data;
 using QuoteManager.Models;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using QuoteManager.ViewModels;
 
 namespace QuoteManager.Pages.Quotes
 {
     [Authorize(Roles = "SuperAdmin,Admin,Staff")]
-    public class EditModel : PageModel
+    public class EditModel : QuoteBasePage
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-
-        public EditModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public EditModel(
+            ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            ILogger<EditModel> logger)
+            : base(context, userManager, logger)
         {
-            _context = context;
-            _userManager = userManager;
         }
 
         [BindProperty]
-        public Quote Quote { get; set; } = default!;
+        public EditQuoteViewModel Input { get; set; } = default!;
 
         public SelectList StatusList { get; set; } = default!;
-        public string ClientName { get; set; } = string.Empty;
-        public string CreatedByName { get; set; } = string.Empty;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -38,33 +33,29 @@ namespace QuoteManager.Pages.Quotes
                 return NotFound();
             }
 
-            var quote = await _context.Quotes
-                .Include(q => q.Client)
-                .Include(q => q.CreatedBy)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
+            var quote = await GetAuthorizedQuoteAsync(id.Value);
+            
             if (quote == null)
             {
-                return NotFound();
-            }
-
-            // Verify user has permission to edit this quote
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return Forbid();
-            }
-
-            var hasAccess = await VerifyQuoteAccess(currentUser.Id, quote);
-            if (!hasAccess)
-            {
-                TempData["ErrorMessage"] = "You don't have permission to edit this quote.";
+                TempData[TempDataKeys.Error] = "Quote not found or you don't have permission to edit it.";
                 return RedirectToPage("./Index");
             }
 
-            Quote = quote;
-            ClientName = quote.Client.FullName;
-            CreatedByName = quote.CreatedBy.FullName;
+            // Map to ViewModel to prevent mass assignment
+            Input = new EditQuoteViewModel
+            {
+                Id = quote.Id,
+                QuoteNumber = quote.QuoteNumber,
+                ClientName = quote.Client.FullName,
+                CreatedDate = quote.CreatedDate,
+                Title = quote.Title,
+                Description = quote.Description,
+                ValidUntil = quote.ValidUntil,
+                Status = quote.Status,
+                SubTotal = quote.SubTotal,
+                TotalTax = quote.TotalTax,
+                GrandTotal = quote.GrandTotal
+            };
 
             LoadStatusList();
 
@@ -79,54 +70,67 @@ namespace QuoteManager.Pages.Quotes
                 return Page();
             }
 
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
+            // Validate status
+            if (!QuoteStatus.IsValid(Input.Status))
             {
-                return Forbid();
+                ModelState.AddModelError("Input.Status", "Invalid status selected");
+                LoadStatusList();
+                return Page();
             }
 
-            // Get original quote from database
+            // Get original quote from database with tracking
             var quoteToUpdate = await _context.Quotes
-                .Include(q => q.Client)
-                .Include(q => q.CreatedBy)
-                .FirstOrDefaultAsync(q => q.Id == Quote.Id);
+                .FirstOrDefaultAsync(q => q.Id == Input.Id);
 
             if (quoteToUpdate == null)
             {
                 return NotFound();
             }
 
-            // Verify access
-            var hasAccess = await VerifyQuoteAccess(currentUser.Id, quoteToUpdate);
+            // Verify access using base page method
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null) return Forbid();
+
+            var hasAccess = await VerifyQuoteAccessAsync(currentUser.Id, quoteToUpdate);
             if (!hasAccess)
             {
-                TempData["ErrorMessage"] = "You don't have permission to edit this quote.";
+                TempData[TempDataKeys.Error] = "You don't have permission to edit this quote.";
                 return RedirectToPage("./Index");
             }
 
-            // Update allowed fields only
-            quoteToUpdate.Title = Quote.Title;
-            quoteToUpdate.Description = Quote.Description;
-            quoteToUpdate.Amount = Quote.Amount;
-            quoteToUpdate.Status = Quote.Status;
-            quoteToUpdate.ValidUntil = Quote.ValidUntil;
+            // CRITICAL: Only update allowed fields from ViewModel
+            // This prevents mass assignment attacks
+            quoteToUpdate.Title = Input.Title;
+            quoteToUpdate.Description = Input.Description;
+            quoteToUpdate.Status = Input.Status;
+            quoteToUpdate.ValidUntil = Input.ValidUntil;
 
-            // Do NOT update: QuoteNumber, ClientId, CreatedById, CreatedDate
+            // Do NOT update: QuoteNumber, ClientId, CreatedById, CreatedDate, SubTotal, TotalTax, GrandTotal
+            // These are calculated or system-managed fields
 
             try
             {
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = $"Quote '{quoteToUpdate.Title}' updated successfully!";
+                
+                _logger.LogInformation(
+                    "Quote {QuoteId} updated by user {UserId}",
+                    quoteToUpdate.Id,
+                    currentUser.Id);
+
+                TempData[TempDataKeys.Success] = $"Quote '{quoteToUpdate.QuoteNumber}' updated successfully!";
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
-                if (!QuoteExists(Quote.Id))
+                if (!QuoteExists(Input.Id))
                 {
                     return NotFound();
                 }
                 else
                 {
-                    throw;
+                    _logger.LogError(ex, "Concurrency error updating quote {QuoteId}", Input.Id);
+                    ModelState.AddModelError("", "The quote was modified by another user. Please refresh and try again.");
+                    LoadStatusList();
+                    return Page();
                 }
             }
 
@@ -135,46 +139,7 @@ namespace QuoteManager.Pages.Quotes
 
         private void LoadStatusList()
         {
-            StatusList = new SelectList(new[]
-            {
-                QuoteStatus.Pending,
-                QuoteStatus.Accepted,
-                QuoteStatus.Rejected,
-                QuoteStatus.Expired
-            });
-        }
-
-        private async Task<bool> VerifyQuoteAccess(string userId, Quote quote)
-        {
-            if (User.IsInRole("SuperAdmin"))
-            {
-                return true; // SuperAdmin has access to all
-            }
-
-            if (User.IsInRole("Admin"))
-            {
-                // Check if quote belongs to admin's team's clients
-                var myStaffIds = await _userManager.Users
-                    .Where(u => u.CreatedById == userId)
-                    .Select(u => u.Id)
-                    .ToListAsync();
-
-                var isMyTeamClient = await _userManager.Users
-                    .AnyAsync(u => u.Id == quote.ClientId && myStaffIds.Contains(u.CreatedById));
-
-                return isMyTeamClient;
-            }
-
-            if (User.IsInRole("Staff"))
-            {
-                // Check if quote belongs to staff's client
-                var isMyClient = await _userManager.Users
-                    .AnyAsync(u => u.Id == quote.ClientId && u.CreatedById == userId);
-
-                return isMyClient;
-            }
-
-            return false;
+            StatusList = new SelectList(QuoteStatus.All);
         }
 
         private bool QuoteExists(int id)

@@ -21,6 +21,10 @@
       "PackagePath": "staticwebassets\\js\\admin.js"
     },
     {
+      "Id": "D:\\Internship\\QM\\QuoteManager\\QuoteManager\\wwwroot\\js\\quote-manager.js",
+      "PackagePath": "staticwebassets\\js\\quote-manager.js"
+    },
+    {
       "Id": "D:\\Internship\\QM\\QuoteManager\\QuoteManager\\wwwroot\\js\\site.js",
       "PackagePath": "staticwebassets\\js\\site.js"
     },

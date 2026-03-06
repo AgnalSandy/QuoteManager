@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model QuoteManager.Pages.Quotes.DeleteModel
 @{
     ViewData["Title"] = "Delete Quote";
@@ -56,20 +56,20 @@
 
                             <dt class="col-sm-4">Amount</dt>
                             <dd class="col-sm-8">
-                                <strong class="text-success">@Model.Quote.Amount.ToString("C")</strong>
+                                <strong class="text-success">@Model.Quote.GrandTotal.ToString("C")</strong>
                             </dd>
 
                             <dt class="col-sm-4">Status</dt>
                             <dd class="col-sm-8">
-                                @if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                                @if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
                                 {
                                     <span class="badge badge-warning">Pending</span>
                                 }
-                                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Accepted)
+                                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Accepted)
                                 {
                                     <span class="badge badge-success">Accepted</span>
                                 }
-                                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Rejected)
+                                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Rejected)
                                 {
                                     <span class="badge badge-danger">Rejected</span>
                                 }

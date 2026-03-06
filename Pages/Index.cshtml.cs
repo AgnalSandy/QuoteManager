@@ -10,17 +10,20 @@ namespace QuoteManager.Pages
             // If user is authenticated, handle role-based navigation
             if (User.Identity?.IsAuthenticated == true)
             {
-                // Admin/Staff go to dashboard
-                if (User.IsInRole("Admin") || User.IsInRole("Staff") || User.IsInRole("SuperAdmin"))
+                // Clients always go to their dashboard
+                if (User.IsInRole("Client"))
+                {
+                    return RedirectToPage("/Client/Dashboard");
+                }
+                // Admin/Staff go to their dashboard
+                else if (User.IsInRole("Admin") || User.IsInRole("Staff") || User.IsInRole("SuperAdmin"))
                 {
                     return RedirectToPage("/Dashboard/Index");
                 }
-                // Client stays on home page but scrolls to their info
-                else if (User.IsInRole("Client"))
+                // If user has no recognized role, show access denied
+                else
                 {
-                    // Client sees the home page with their info section
-                    // The anchor #client-info will scroll them to their section
-                    return Page();
+                    return RedirectToPage("/AccessDenied");
                 }
             }
 

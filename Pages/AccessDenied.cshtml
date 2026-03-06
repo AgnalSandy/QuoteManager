@@ -1,0 +1,52 @@
+@page
+@model QuoteManager.Pages.AccessDeniedModel
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1 class="display-1 text-danger">
+                    <i class="fas fa-ban"></i>
+                </h1>
+                <h2 class="display-4">Access Denied</h2>
+                <div class="error-details mb-4">
+                    <p class="lead">Sorry, you don't have permission to access this page.</p>
+                </div>
+                <div class="error-actions">
+                    <a href="javascript:history.back()" class="btn btn-primary btn-lg mx-2">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </a>
+                    <a asp-page="/Index" class="btn btn-secondary btn-lg mx-2">
+                        <i class="fas fa-home"></i> Go Home
+                    </a>
+                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Staff"))
+                    {
+                        <a asp-page="/Dashboard/Index" class="btn btn-info btn-lg mx-2">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    }
+                    @if (User.IsInRole("Client"))
+                    {
+                        <a asp-page="/Client/Dashboard" class="btn btn-info btn-lg mx-2">
+                            <i class="fas fa-tachometer-alt"></i> My Dashboard
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .error-template {
+        padding: 40px 15px;
+    }
+    .error-actions {
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+</style>

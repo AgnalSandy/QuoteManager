@@ -9,6 +9,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - QuoteManager Admin</title>
 
+    <!-- OPTIMIZED: Preconnect to external CDNs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
     <!-- Google Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
@@ -123,6 +131,91 @@
                             </li>
                         }
 
+
+                        <!-- Quotes -->
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Staff"))
+                        {
+                            <li class="nav-item">
+                                <a asp-page="/Quotes/Index" class="nav-link">
+                                    <i class="nav-icon fas fa-file-alt"></i>
+                                    <p>Quotes</p>
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Client Quotes -->
+                        @if (User.IsInRole("Client"))
+                        {
+                            <li class="nav-item">
+                                <a asp-page="/Client/Quotes" class="nav-link">
+                                    <i class="nav-icon fas fa-file-invoice"></i>
+                                    <p>My Quotes</p>
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Invoices -->
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Staff"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Invoices/Index">
+                                    <i class="nav-icon fas fa-file-invoice"></i>
+                                    <p>Invoices</p>
+                                </a>
+                            </li>
+                        }
+                        
+                        <!-- Client Invoices -->
+                        @if (User.IsInRole("Client"))
+                        {
+                            <li class="nav-item">
+                                <a asp-page="/Client/Invoices" class="nav-link">
+                                    <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                                    <p>My Invoices</p>
+                                </a>
+                            </li>
+                        }
+
+
+
+                        <!-- Master Data Section (Admin & SuperAdmin only) -->
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-database"></i>
+                                    <p>
+                                        Master Data
+                                        <i class="fas fa-angle-left right"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    @if (User.IsInRole("SuperAdmin"))
+                                    {
+                                        <li class="nav-item">
+                                            <a asp-page="/TaxMasters/Index" class="nav-link">
+                                                <i class="fas fa-percent nav-icon"></i>
+                                                <p>Tax Master</p>
+                                            </a>
+                                        </li>
+                                    }
+                                    <li class="nav-item">
+                                        <a asp-page="/ServiceMasters/Index" class="nav-link">
+                                            <i class="fas fa-briefcase nav-icon"></i>
+                                            <p>Service Master</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <!-- Company Settings -->
+                            <li class="nav-item">
+                                <a asp-page="/CompanySettings/Edit" class="nav-link">
+                                    <i class="nav-icon fas fa-building"></i>
+                                    <p>Company Settings</p>
+                                </a>
+                            </li>
+                        }
                         <!-- User Management (Admin/Staff Only) -->
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Staff"))
                         {
@@ -133,6 +226,20 @@
                                 </a>
                             </li>
                         }
+
+
+
+                        <!-- Reports (Admin & SuperAdmin only) -->
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-chart-pie"></i>
+                                    <p>Reports</p>
+                                </a>
+                            </li>
+                        }
+
 
                         <!-- Profile (All Users) -->
                         <li class="nav-item">
@@ -167,34 +274,7 @@
                 </nav>
 
 
-                <!-- Quotes -->
-                <li class="nav-item">
-                    <a asp-page="/Quotes/Index" class="nav-link">
-                        <i class="nav-icon fas fa-file-alt"></i>
-                        <p>Quotes</p>
-                    </a>
-                </li>
-                        <!-- Reports (Admin & SuperAdmin only) -->
-                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-chart-pie"></i>
-                                    <p>Reports</p>
-                                </a>
-                            </li>
-                        }
-
-                        <!-- Settings (SuperAdmin only) -->
-                        @if (User.IsInRole("SuperAdmin"))
-                        {
-                            <li class="nav-item">
-                                <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-cog"></i>
-                                    <p>Settings</p>
-                                </a>
-                            </li>
-                        }
+       
 
                     </ul>
                 </nav>
@@ -223,6 +303,44 @@
             <!-- Main content -->
             <section class="content">
                 <div class="container-fluid">
+                    <!-- Success/Error Messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="icon fas fa-check"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="icon fas fa-ban"></i> @TempData["ErrorMessage"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+                    @if (TempData["InfoMessage"] != null)
+                    {
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="icon fas fa-info"></i> @TempData["InfoMessage"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+                    @if (TempData["WarningMessage"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="icon fas fa-exclamation-triangle"></i> @TempData["WarningMessage"]
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    }
+
                     @RenderBody()
                 </div>
             </section>

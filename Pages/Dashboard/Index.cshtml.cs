@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using QuoteManager.Constants;
 using QuoteManager.Data;
 using QuoteManager.Models;
 using System.Threading.Tasks;
@@ -46,6 +47,14 @@ namespace QuoteManager.Pages.Dashboard
         public decimal RejectedRevenue { get; set; }
         public decimal AverageQuoteValue { get; set; }
 
+        // Invoice stats
+        public int TotalInvoices { get; set; }
+        public int PaidInvoices { get; set; }
+        public int UnpaidInvoices { get; set; }
+        public decimal TotalInvoiceRevenue { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal UnpaidAmount { get; set; }
+
         public async Task OnGetAsync()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -83,113 +92,206 @@ namespace QuoteManager.Pages.Dashboard
         // ==================== SuperAdmin Stats ====================
         private async Task CalculateSuperAdminStats(string currentUserId)
         {
-            // User counts (excluding self)
+            // OPTIMIZED: User counts (excluding self) - single query
+            TotalUsersCount = await _userManager.Users
+                .Where(u => u.Id != currentUserId)
+                .CountAsync();
+
+            // Get role counts efficiently
             var allUsers = await _userManager.Users
                 .Where(u => u.Id != currentUserId)
+                .Select(u => u.Id)
                 .ToListAsync();
 
-            TotalUsersCount = allUsers.Count;
+            AdminCount = 0;
+            StaffCount = 0;
+            ClientCount = 0;
 
-            foreach (var user in allUsers)
+            foreach (var userId in allUsers)
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
-                var role = userRoles.FirstOrDefault();
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    var roles = await _userManager.GetRolesAsync(user);
+                    var role = roles.FirstOrDefault();
 
-                if (role == "Admin") AdminCount++;
-                else if (role == "Staff") StaffCount++;
-                else if (role == "Client") ClientCount++;
+                    if (role == "Admin") AdminCount++;
+                    else if (role == "Staff") StaffCount++;
+                    else if (role == "Client") ClientCount++;
+                }
             }
 
-            // Quote & Revenue stats (ALL quotes)
-            var allQuotes = await _context.Quotes.ToListAsync();
+            // OPTIMIZED: Quote & Revenue stats - database aggregation
+            var quoteStats = await _context.Quotes
+                .GroupBy(q => 1)
+                .Select(g => new
+                {
+                    TotalCount = g.Count(),
+                    PendingCount = g.Count(q => q.Status == QuoteStatus.Pending),
+                    AcceptedCount = g.Count(q => q.Status == QuoteStatus.Accepted),
+                    RejectedCount = g.Count(q => q.Status == QuoteStatus.Rejected),
+                    TotalRev = g.Sum(q => q.GrandTotal),
+                    PendingRev = g.Where(q => q.Status == QuoteStatus.Pending).Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    AcceptedRev = g.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    RejectedRev = g.Where(q => q.Status == QuoteStatus.Rejected).Sum(q => (decimal?)q.GrandTotal) ?? 0
+                })
+                .FirstOrDefaultAsync();
 
-            TotalQuotes = allQuotes.Count;
-            PendingQuotes = allQuotes.Count(q => q.Status == QuoteStatus.Pending);
-            AcceptedQuotes = allQuotes.Count(q => q.Status == QuoteStatus.Accepted);  // ⭐ Use your status
-            RejectedQuotes = allQuotes.Count(q => q.Status == QuoteStatus.Rejected);
-
-            TotalRevenue = allQuotes.Sum(q => q.Amount);
-            PendingRevenue = allQuotes.Where(q => q.Status == QuoteStatus.Pending).Sum(q => q.Amount);
-            AcceptedRevenue = allQuotes.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => q.Amount);  // ⭐
-            RejectedRevenue = allQuotes.Where(q => q.Status == QuoteStatus.Rejected).Sum(q => q.Amount);
+            TotalQuotes = quoteStats?.TotalCount ?? 0;
+            PendingQuotes = quoteStats?.PendingCount ?? 0;
+            AcceptedQuotes = quoteStats?.AcceptedCount ?? 0;
+            RejectedQuotes = quoteStats?.RejectedCount ?? 0;
+            TotalRevenue = quoteStats?.TotalRev ?? 0;
+            PendingRevenue = quoteStats?.PendingRev ?? 0;
+            AcceptedRevenue = quoteStats?.AcceptedRev ?? 0;
+            RejectedRevenue = quoteStats?.RejectedRev ?? 0;
             AverageQuoteValue = TotalQuotes > 0 ? TotalRevenue / TotalQuotes : 0;
+
+            // OPTIMIZED: Invoice stats - database aggregation
+            var invoiceStats = await _context.Invoices
+                .GroupBy(i => 1)
+                .Select(g => new
+                {
+                    TotalCount = g.Count(),
+                    PaidCount = g.Count(i => i.Status == InvoiceStatus.Paid),
+                    UnpaidCount = g.Count(i => i.Status != InvoiceStatus.Paid),
+                    TotalRev = g.Sum(i => i.GrandTotal),
+                    PaidAmt = g.Where(i => i.Status == InvoiceStatus.Paid).Sum(i => (decimal?)i.GrandTotal) ?? 0,
+                    UnpaidAmt = g.Where(i => i.Status != InvoiceStatus.Paid).Sum(i => (decimal?)i.GrandTotal) ?? 0
+                })
+                .FirstOrDefaultAsync();
+
+            TotalInvoices = invoiceStats?.TotalCount ?? 0;
+            PaidInvoices = invoiceStats?.PaidCount ?? 0;
+            UnpaidInvoices = invoiceStats?.UnpaidCount ?? 0;
+            TotalInvoiceRevenue = invoiceStats?.TotalRev ?? 0;
+            PaidAmount = invoiceStats?.PaidAmt ?? 0;
+            UnpaidAmount = invoiceStats?.UnpaidAmt ?? 0;
         }
 
         // ==================== Admin Stats ====================
         private async Task CalculateAdminStats(string adminId)
         {
-            // Get MY staff
-            var myStaff = await _userManager.Users
+            // OPTIMIZED: Get MY staff IDs in single query
+            var myStaffIds = await _userManager.Users
                 .Where(u => u.CreatedById == adminId)
+                .Select(u => u.Id)
                 .ToListAsync();
 
-            var myStaffUsers = new List<ApplicationUser>();
-            foreach (var user in myStaff)
+            // Count staff efficiently
+            StaffCount = 0;
+            foreach (var staffId in myStaffIds)
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                if (roles.Contains("Staff"))
+                var user = await _userManager.FindByIdAsync(staffId);
+                if (user != null)
                 {
-                    myStaffUsers.Add(user);
+                    var roles = await _userManager.GetRolesAsync(user);
+                    if (roles.Contains("Staff"))
+                    {
+                        StaffCount++;
+                    }
                 }
             }
 
-            StaffCount = myStaffUsers.Count;
-            var myStaffIds = myStaffUsers.Select(s => s.Id).ToList();
-
-            // Get clients of MY staff
-            var myStaffClients = await _userManager.Users
+            // OPTIMIZED: Get clients of MY staff in single query
+            var myClientIds = await _userManager.Users
                 .Where(u => myStaffIds.Contains(u.CreatedById))
+                .Select(u => u.Id)
                 .ToListAsync();
 
+            // Count clients efficiently
             ClientCount = 0;
-            var myClientIds = new List<string>();
-            foreach (var user in myStaffClients)
+            var validClientIds = new List<string>();
+            foreach (var clientId in myClientIds)
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                if (roles.Contains("Client"))
+                var user = await _userManager.FindByIdAsync(clientId);
+                if (user != null)
                 {
-                    ClientCount++;
-                    myClientIds.Add(user.Id);
+                    var roles = await _userManager.GetRolesAsync(user);
+                    if (roles.Contains("Client"))
+                    {
+                        ClientCount++;
+                        validClientIds.Add(clientId);
+                    }
                 }
             }
 
             TotalUsersCount = StaffCount + ClientCount;
             AdminCount = 0;
 
-            // Get quotes for MY team's clients
-            var myTeamQuotes = await _context.Quotes
-                .Where(q => myClientIds.Contains(q.ClientId))
-                .ToListAsync();
+            // OPTIMIZED: Quote stats - database aggregation
+            var quoteStats = await _context.Quotes
+                .Where(q => validClientIds.Contains(q.ClientId))
+                .GroupBy(q => 1)
+                .Select(g => new
+                {
+                    TotalCount = g.Count(),
+                    PendingCount = g.Count(q => q.Status == QuoteStatus.Pending),
+                    AcceptedCount = g.Count(q => q.Status == QuoteStatus.Accepted),
+                    RejectedCount = g.Count(q => q.Status == QuoteStatus.Rejected),
+                    TotalRev = g.Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    PendingRev = g.Where(q => q.Status == QuoteStatus.Pending).Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    AcceptedRev = g.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    RejectedRev = g.Where(q => q.Status == QuoteStatus.Rejected).Sum(q => (decimal?)q.GrandTotal) ?? 0
+                })
+                .FirstOrDefaultAsync();
 
-            TotalQuotes = myTeamQuotes.Count;
-            PendingQuotes = myTeamQuotes.Count(q => q.Status == QuoteStatus.Pending);
-            AcceptedQuotes = myTeamQuotes.Count(q => q.Status == QuoteStatus.Accepted);
-            RejectedQuotes = myTeamQuotes.Count(q => q.Status == QuoteStatus.Rejected);
-
-            TotalRevenue = myTeamQuotes.Sum(q => q.Amount);
-            PendingRevenue = myTeamQuotes.Where(q => q.Status == QuoteStatus.Pending).Sum(q => q.Amount);
-            AcceptedRevenue = myTeamQuotes.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => q.Amount);
-            RejectedRevenue = myTeamQuotes.Where(q => q.Status == QuoteStatus.Rejected).Sum(q => q.Amount);
+            TotalQuotes = quoteStats?.TotalCount ?? 0;
+            PendingQuotes = quoteStats?.PendingCount ?? 0;
+            AcceptedQuotes = quoteStats?.AcceptedCount ?? 0;
+            RejectedQuotes = quoteStats?.RejectedCount ?? 0;
+            TotalRevenue = quoteStats?.TotalRev ?? 0;
+            PendingRevenue = quoteStats?.PendingRev ?? 0;
+            AcceptedRevenue = quoteStats?.AcceptedRev ?? 0;
+            RejectedRevenue = quoteStats?.RejectedRev ?? 0;
             AverageQuoteValue = TotalQuotes > 0 ? TotalRevenue / TotalQuotes : 0;
+
+            // OPTIMIZED: Invoice stats - database aggregation
+            var invoiceStats = await _context.Invoices
+                .Where(i => validClientIds.Contains(i.ClientId))
+                .GroupBy(i => 1)
+                .Select(g => new
+                {
+                    TotalCount = g.Count(),
+                    PaidCount = g.Count(i => i.Status == InvoiceStatus.Paid),
+                    UnpaidCount = g.Count(i => i.Status != InvoiceStatus.Paid),
+                    TotalRev = g.Sum(i => (decimal?)i.GrandTotal) ?? 0,
+                    PaidAmt = g.Where(i => i.Status == InvoiceStatus.Paid).Sum(i => (decimal?)i.GrandTotal) ?? 0,
+                    UnpaidAmt = g.Where(i => i.Status != InvoiceStatus.Paid).Sum(i => (decimal?)i.GrandTotal) ?? 0
+                })
+                .FirstOrDefaultAsync();
+
+            TotalInvoices = invoiceStats?.TotalCount ?? 0;
+            PaidInvoices = invoiceStats?.PaidCount ?? 0;
+            UnpaidInvoices = invoiceStats?.UnpaidCount ?? 0;
+            TotalInvoiceRevenue = invoiceStats?.TotalRev ?? 0;
+            PaidAmount = invoiceStats?.PaidAmt ?? 0;
+            UnpaidAmount = invoiceStats?.UnpaidAmt ?? 0;
         }
 
         // ==================== Staff Stats ====================
         private async Task CalculateStaffStats(string staffId)
         {
-            // Get MY clients
-            var myClients = await _userManager.Users
+            // OPTIMIZED: Get MY client IDs in single query
+            var myClientIds = await _userManager.Users
                 .Where(u => u.CreatedById == staffId)
+                .Select(u => u.Id)
                 .ToListAsync();
 
+            // Count clients efficiently
             ClientCount = 0;
-            var myClientIds = new List<string>();
-            foreach (var user in myClients)
+            var validClientIds = new List<string>();
+            foreach (var clientId in myClientIds)
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                if (roles.Contains("Client"))
+                var user = await _userManager.FindByIdAsync(clientId);
+                if (user != null)
                 {
-                    ClientCount++;
-                    myClientIds.Add(user.Id);
+                    var roles = await _userManager.GetRolesAsync(user);
+                    if (roles.Contains("Client"))
+                    {
+                        ClientCount++;
+                        validClientIds.Add(clientId);
+                    }
                 }
             }
 
@@ -197,21 +299,54 @@ namespace QuoteManager.Pages.Dashboard
             AdminCount = 0;
             StaffCount = 0;
 
-            // Get quotes for MY clients
-            var myClientQuotes = await _context.Quotes
-                .Where(q => myClientIds.Contains(q.ClientId))
-                .ToListAsync();
+            // OPTIMIZED: Quote stats - database aggregation
+            var quoteStats = await _context.Quotes
+                .Where(q => validClientIds.Contains(q.ClientId))
+                .GroupBy(q => 1)
+                .Select(g => new
+                {
+                    TotalCount = g.Count(),
+                    PendingCount = g.Count(q => q.Status == QuoteStatus.Pending),
+                    AcceptedCount = g.Count(q => q.Status == QuoteStatus.Accepted),
+                    RejectedCount = g.Count(q => q.Status == QuoteStatus.Rejected),
+                    TotalRev = g.Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    PendingRev = g.Where(q => q.Status == QuoteStatus.Pending).Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    AcceptedRev = g.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => (decimal?)q.GrandTotal) ?? 0,
+                    RejectedRev = g.Where(q => q.Status == QuoteStatus.Rejected).Sum(q => (decimal?)q.GrandTotal) ?? 0
+                })
+                .FirstOrDefaultAsync();
 
-            TotalQuotes = myClientQuotes.Count;
-            PendingQuotes = myClientQuotes.Count(q => q.Status == QuoteStatus.Pending);
-            AcceptedQuotes = myClientQuotes.Count(q => q.Status == QuoteStatus.Accepted);
-            RejectedQuotes = myClientQuotes.Count(q => q.Status == QuoteStatus.Rejected);
-
-            TotalRevenue = myClientQuotes.Sum(q => q.Amount);
-            PendingRevenue = myClientQuotes.Where(q => q.Status == QuoteStatus.Pending).Sum(q => q.Amount);
-            AcceptedRevenue = myClientQuotes.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => q.Amount);
-            RejectedRevenue = myClientQuotes.Where(q => q.Status == QuoteStatus.Rejected).Sum(q => q.Amount);
+            TotalQuotes = quoteStats?.TotalCount ?? 0;
+            PendingQuotes = quoteStats?.PendingCount ?? 0;
+            AcceptedQuotes = quoteStats?.AcceptedCount ?? 0;
+            RejectedQuotes = quoteStats?.RejectedCount ?? 0;
+            TotalRevenue = quoteStats?.TotalRev ?? 0;
+            PendingRevenue = quoteStats?.PendingRev ?? 0;
+            AcceptedRevenue = quoteStats?.AcceptedRev ?? 0;
+            RejectedRevenue = quoteStats?.RejectedRev ?? 0;
             AverageQuoteValue = TotalQuotes > 0 ? TotalRevenue / TotalQuotes : 0;
+
+            // OPTIMIZED: Invoice stats - database aggregation
+            var invoiceStats = await _context.Invoices
+                .Where(i => validClientIds.Contains(i.ClientId))
+                .GroupBy(i => 1)
+                .Select(g => new
+                {
+                    TotalCount = g.Count(),
+                    PaidCount = g.Count(i => i.Status == InvoiceStatus.Paid),
+                    UnpaidCount = g.Count(i => i.Status != InvoiceStatus.Paid),
+                    TotalRev = g.Sum(i => (decimal?)i.GrandTotal) ?? 0,
+                    PaidAmt = g.Where(i => i.Status == InvoiceStatus.Paid).Sum(i => (decimal?)i.GrandTotal) ?? 0,
+                    UnpaidAmt = g.Where(i => i.Status != InvoiceStatus.Paid).Sum(i => (decimal?)i.GrandTotal) ?? 0
+                })
+                .FirstOrDefaultAsync();
+
+            TotalInvoices = invoiceStats?.TotalCount ?? 0;
+            PaidInvoices = invoiceStats?.PaidCount ?? 0;
+            UnpaidInvoices = invoiceStats?.UnpaidCount ?? 0;
+            TotalInvoiceRevenue = invoiceStats?.TotalRev ?? 0;
+            PaidAmount = invoiceStats?.PaidAmt ?? 0;
+            UnpaidAmount = invoiceStats?.UnpaidAmt ?? 0;
         }
     }
 }

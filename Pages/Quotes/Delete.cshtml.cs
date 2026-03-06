@@ -68,6 +68,8 @@ namespace QuoteManager.Pages.Quotes
 
             var quote = await _context.Quotes
                 .Include(q => q.Client)
+                .Include(q => q.QuoteItems)
+                    .ThenInclude(qi => qi.QuoteItemTaxes)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (quote == null)
@@ -88,13 +90,32 @@ namespace QuoteManager.Pages.Quotes
                 return RedirectToPage("./Index");
             }
 
+            // Check if quote has any invoices
+            var hasInvoices = await _context.Invoices
+                .AnyAsync(i => i.QuoteId == id);
+
+            if (hasInvoices)
+            {
+                TempData["ErrorMessage"] = $"Cannot delete quote '{quote.Title}' because it has associated invoices. Delete the invoices first.";
+                return RedirectToPage("./Index");
+            }
+
             var quoteTitle = quote.Title;
 
-            _context.Quotes.Remove(quote);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // QuoteItems and QuoteItemTaxes will be deleted automatically due to Cascade delete
+                _context.Quotes.Remove(quote);
+                await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"Quote '{quoteTitle}' deleted successfully.";
-            return RedirectToPage("./Index");
+                TempData["SuccessMessage"] = $"Quote '{quoteTitle}' deleted successfully.";
+                return RedirectToPage("./Index");
+            }
+            catch (DbUpdateException ex)
+            {
+                TempData["ErrorMessage"] = $"Error deleting quote '{quoteTitle}'. It may have related records that need to be deleted first.";
+                return RedirectToPage("./Index");
+            }
         }
 
         private async Task<bool> VerifyQuoteAccess(string userId, Quote quote)

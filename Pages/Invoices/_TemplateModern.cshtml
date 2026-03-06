@@ -1,0 +1,160 @@
+﻿@model QuoteManager.Pages.Invoices.InvoicePageModelBase
+
+<div class="container my-5">
+    <div class="p-4" style="max-width: 1000px; margin: 0 auto;">
+        <!-- Modern Gradient Header -->
+        <div class="card mb-4 border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body p-5">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-3 mb-3">INVOICE</h1>
+                        <h4>@Model.Company.CompanyName</h4>
+                        <p class="mb-0 opacity-75">
+                            @{
+                                var addressParts = new List<string>();
+                                if (!string.IsNullOrEmpty(Model.Company.AddressLine1))
+                                {
+                                    addressParts.Add(Model.Company.AddressLine1);
+                                }
+                                if (!string.IsNullOrEmpty(Model.Company.AddressLine2) && 
+                                    Model.Company.AddressLine2 != Model.Company.AddressLine1)
+                                {
+                                    addressParts.Add(Model.Company.AddressLine2);
+                                }
+                            }
+                            @string.Join(", ", addressParts)@(addressParts.Any() ? ", " : "")@Model.Company.City, @Model.Company.State @Model.Company.PinCode<br />
+                            @Model.Company.Country<br />
+                            @if (!string.IsNullOrEmpty(Model.Company.PhoneNumber))
+                            {
+                                @Model.Company.PhoneNumber
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Company.Email))
+                            {
+                                if (!string.IsNullOrEmpty(Model.Company.PhoneNumber))
+                                {
+                                    @: |
+                                }
+                                @Model.Company.Email
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="bg-white text-dark rounded p-4">
+                            <h2 class="text-primary mb-2">@Model.Invoice.InvoiceNumber</h2>
+                            <p class="small mb-1">@Model.Invoice.InvoiceDate.ToString("dd MMM yyyy")</p>
+                            <span class="badge bg-success">@Model.Invoice.Status</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Info Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h5 class="text-primary mb-3"><i class="bi bi-person-circle"></i> Client Details</h5>
+                <h6 class="mb-2">@Model.Invoice.ClientName</h6>
+                <p class="small text-muted mb-0">
+                    @Model.Invoice.ClientEmail<br />
+                    @Model.Invoice.ClientPhone
+                </p>
+            </div>
+        </div>
+
+        <!-- Items as Cards -->
+        <div class="mb-4">
+            <h5 class="mb-3"><i class="bi bi-list-ul"></i> Services</h5>
+            @foreach (var item in Model.Invoice.Items)
+            {
+                var itemTotal = item.Amount + item.Taxes.Sum(t => t.TaxAmount);
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">@item.ServiceName</h6>
+                                <p class="small text-muted mb-0">@item.Description</p>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <small class="text-muted">Qty</small><br />
+                                <strong>@item.Quantity</strong>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <small class="text-muted">Rate</small><br />
+                                <strong>₹@item.UnitPrice.ToString("N2")</strong>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <small class="text-muted">Total</small><br />
+                                <h6 class="mb-0 text-primary">₹@itemTotal.ToString("N2")</h6>
+                            </div>
+                        </div>
+                        @if (item.Taxes.Any())
+                        {
+                            <div class="mt-2 pt-2 border-top">
+                                <small class="text-muted">
+                                    Taxes:
+                                    @foreach (var tax in item.Taxes)
+                                    {
+                                        <span class="badge bg-secondary me-1">@tax.TaxName @tax.TaxPercentage%</span>
+                                    }
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Total Card -->
+        <div class="card shadow">
+            <div class="card-body" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>Summary</h5>
+                        <p class="mb-0 small opacity-75">Due: @Model.Invoice.DueDate.ToString("dd MMM yyyy")</p>
+                    </div>
+                    <div class="col-md-4">
+                        <table class="table table-borderless text-white mb-0">
+                            <tr class="opacity-75">
+                                <td>Subtotal:</td>
+                                <td class="text-end">₹@Model.Invoice.SubTotal.ToString("N2")</td>
+                            </tr>
+                            <tr class="opacity-75">
+                                <td>Tax:</td>
+                                <td class="text-end">₹@Model.Invoice.VATTotal.ToString("N2")</td>
+                            </tr>
+                            @if (Model.Invoice.Discount > 0)
+                            {
+                                <tr class="opacity-75">
+                                    <td>Discount:</td>
+                                    <td class="text-end">-₹@Model.Invoice.Discount.ToString("N2")</td>
+                                </tr>
+                            }
+                            <tr class="border-top border-white">
+                                <td><h5 class="mb-0">Total:</h5></td>
+                                <td class="text-end"><h4 class="mb-0">₹@Model.Invoice.GrandTotal.ToString("N2")</h4></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Info -->
+        @if (!string.IsNullOrEmpty(Model.Invoice.BankName))
+        {
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="text-primary"><i class="bi bi-bank2"></i> Payment Information</h6>
+                    <p class="small mb-0">
+                        <strong>@Model.Invoice.BankName</strong> | Account: @Model.Invoice.AccountNumber
+                    </p>
+                </div>
+            </div>
+        }
+
+        <!-- Footer -->
+        <div class="text-center mt-5">
+            <p class="text-muted">@Model.Company.FooterMessage</p>
+        </div>
+    </div>
+</div>

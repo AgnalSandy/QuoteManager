@@ -35,10 +35,24 @@
                             <dt class="col-sm-3">Description</dt>
                             <dd class="col-sm-9">@(Model.Quote.Description ?? "No description")</dd>
 
-                            <dt class="col-sm-3">Amount</dt>
+                            <dt class="col-sm-3">Sub Total</dt>
+                            <dd class="col-sm-9">
+                                <h4>
+                                    <i class="fas fa-rupee-sign"></i> ₹@Model.Quote.SubTotal.ToString("N2")
+                                </h4>
+                            </dd>
+
+                            <dt class="col-sm-3">Total Tax</dt>
+                            <dd class="col-sm-9">
+                                <h5 class="text-info">
+                                    <i class="fas fa-receipt"></i> ₹@Model.Quote.TotalTax.ToString("N2")
+                                </h5>
+                            </dd>
+
+                            <dt class="col-sm-3">Grand Total</dt>
                             <dd class="col-sm-9">
                                 <h3 class="text-success">
-                                    <i class="fas fa-dollar-sign"></i> @Model.Quote.Amount.ToString("N2")
+                                    <i class="fas fa-rupee-sign"></i> ₹@Model.Quote.GrandTotal.ToString("N2")
                                 </h3>
                             </dd>
 

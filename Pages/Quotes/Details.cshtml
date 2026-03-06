@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model QuoteManager.Pages.Quotes.DetailsModel
 @{
     ViewData["Title"] = "Quote Details";
@@ -28,7 +28,7 @@
             <div class="col-md-8 offset-md-2">
 
                 <!-- Status Banner -->
-                @if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                @if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
                 {
                     <div class="alert alert-warning alert-dismissible">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -36,7 +36,7 @@
                         This quote is waiting for client response.
                     </div>
                 }
-                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Accepted)
+                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Accepted)
                 {
                     <div class="alert alert-success alert-dismissible">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -44,7 +44,7 @@
                         This quote has been accepted by the client.
                     </div>
                 }
-                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Rejected)
+                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Rejected)
                 {
                     <div class="alert alert-danger alert-dismissible">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -52,7 +52,7 @@
                         This quote has been rejected by the client.
                     </div>
                 }
-                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Expired)
+                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Expired)
                 {
                     <div class="alert alert-secondary alert-dismissible">
                         <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -93,31 +93,31 @@
                             <dt class="col-sm-3">Amount</dt>
                             <dd class="col-sm-9">
                                 <h4 class="text-success">
-                                    <i class="fas fa-dollar-sign"></i> @Model.Quote.Amount.ToString("N2")
+                                    ₹ @Model.Quote.GrandTotal.ToString("N2")
                                 </h4>
                             </dd>
 
                             <dt class="col-sm-3">Status</dt>
                             <dd class="col-sm-9">
-                                @if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                                @if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
                                 {
                                     <span class="badge badge-warning badge-lg">
                                         <i class="fas fa-clock"></i> Pending
                                     </span>
                                 }
-                                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Accepted)
+                                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Accepted)
                                 {
                                     <span class="badge badge-success badge-lg">
                                         <i class="fas fa-check"></i> Accepted
                                     </span>
                                 }
-                                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Rejected)
+                                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Rejected)
                                 {
                                     <span class="badge badge-danger badge-lg">
                                         <i class="fas fa-times"></i> Rejected
                                     </span>
                                 }
-                                else if (Model.Quote.Status == QuoteManager.Models.QuoteStatus.Expired)
+                                else if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Expired)
                                 {
                                     <span class="badge badge-secondary badge-lg">
                                         <i class="fas fa-ban"></i> Expired
@@ -153,7 +153,7 @@
                                 @if (Model.Quote.ValidUntil.HasValue)
                                 {
                                     <span>@Model.Quote.ValidUntil.Value.ToString("MMMM dd, yyyy")</span>
-                                    @if (Model.Quote.ValidUntil < DateTime.UtcNow && Model.Quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                                    @if (Model.Quote.ValidUntil < DateTime.UtcNow && Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
                                     {
                                         <br />
                                         <span class="badge badge-danger">
@@ -171,7 +171,7 @@
                 </div>
 
                 <!-- Client Actions -->
-                @if (Model.IsClient && Model.Quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                @if (Model.IsClient && Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
                 {
                     <div class="card card-warning">
                         <div class="card-header">
@@ -195,10 +195,17 @@
                             <i class="fas fa-arrow-left"></i> Back to List
                         </a>
 
-                        @if (Model.CanEdit && Model.Quote.Status == QuoteManager.Models.QuoteStatus.Pending)
+                        @if (Model.CanEdit && Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Pending)
                         {
                             <a asp-page="Edit" asp-route-id="@Model.Quote.Id" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> Edit
+                            </a>
+                        }
+
+                        @if (Model.Quote.Status == QuoteManager.Constants.QuoteStatus.Accepted && !Model.IsClient)
+                        {
+                            <a asp-page="/Invoices/Create" asp-route-quoteId="@Model.Quote.Id" class="btn btn-success">
+                                <i class="fas fa-file-invoice"></i> Generate Invoice
                             </a>
                         }
 

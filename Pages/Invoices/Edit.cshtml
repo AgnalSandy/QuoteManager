@@ -1,0 +1,320 @@
+@page
+@model QuoteManager.Pages.Invoices.EditModel
+@{
+    ViewData["Title"] = "Edit Invoice";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0"><i class="fas fa-edit"></i> Edit Invoice</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a asp-page="/Dashboard/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="./Index">Invoices</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Important Notice</h5>
+                    <p class="mb-0">
+                        <strong>Note:</strong> Editing this invoice will only update the invoice data. 
+                        The invoice template design remains unchanged. Line items cannot be modified as they are linked to the quote.
+                    </p>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-info-circle"></i> Invoice Details
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                            <input type="hidden" asp-for="Input.Id" />
+                            <input type="hidden" asp-for="Input.RowVersion" />
+
+                            <!-- Read-only Invoice Info -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Invoice Number</label>
+                                        <input asp-for="Input.InvoiceNumber" class="form-control bg-light" readonly />
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-lock"></i> Invoice number cannot be changed
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Quote Number</label>
+                                        <input asp-for="Input.QuoteNumber" class="form-control bg-light" readonly />
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-lock"></i> Linked quote cannot be changed
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Client Name</label>
+                                <input asp-for="Input.ClientName" class="form-control bg-light" readonly />
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-lock"></i> Client cannot be changed
+                                </small>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <!-- Editable Fields -->
+                            <h5 class="mb-3"><i class="fas fa-calendar-alt"></i> Dates</h5>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.InvoiceDate">Invoice Date <span class="text-danger">*</span></label>
+                                        <input asp-for="Input.InvoiceDate" class="form-control" type="date" />
+                                        <span asp-validation-for="Input.InvoiceDate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.DueDate">Due Date <span class="text-danger">*</span></label>
+                                        <input asp-for="Input.DueDate" class="form-control" type="date" />
+                                        <span asp-validation-for="Input.DueDate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <h5 class="mb-3"><i class="fas fa-money-bill-wave"></i> Payment Information</h5>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.Status">Payment Status <span class="text-danger">*</span></label>
+                                        <select asp-for="Input.Status" asp-items="Model.Input.AvailableStatuses" 
+                                                class="form-control" id="statusSelect">
+                                            <option value="">-- Select Status --</option>
+                                        </select>
+                                        <span asp-validation-for="Input.Status" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group" id="paidDateGroup">
+                                        <label asp-for="Input.PaidDate">Paid Date</label>
+                                        <input asp-for="Input.PaidDate" class="form-control" type="date" id="paidDateInput" />
+                                        <span asp-validation-for="Input.PaidDate" class="text-danger"></span>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> Only shown when status is "Paid"
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <h5 class="mb-3"><i class="fas fa-calculator"></i> Financial Details</h5>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Sub Total</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">₹</span>
+                                            </div>
+                                            <input asp-for="Input.SubTotal" class="form-control bg-light" readonly />
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-lock"></i> Calculated from quote items
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>VAT/Tax Total</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">₹</span>
+                                            </div>
+                                            <input asp-for="Input.VATTotal" class="form-control bg-light" readonly />
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-lock"></i> Calculated from quote items
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.Discount">Discount <small class="text-muted">(Optional)</small></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">₹</span>
+                                            </div>
+                                            <input asp-for="Input.Discount" class="form-control" placeholder="0.00" />
+                                        </div>
+                                        <span asp-validation-for="Input.Discount" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Grand Total (Auto-calculated)</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">₹</span>
+                                            </div>
+                                            <input type="text" class="form-control bg-light font-weight-bold" 
+                                                   value="@((Model.Input.SubTotal + Model.Input.VATTotal - Model.Input.Discount).ToString("N2"))" readonly />
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> SubTotal + Tax - Discount
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <h5 class="mb-3"><i class="fas fa-palette"></i> Template & Design</h5>
+
+                            <div class="form-group">
+                                <label asp-for="Input.TemplateType">Template Style</label>
+                                <div class="input-group">
+                                    <select asp-for="Input.TemplateType" asp-items="Model.Input.AvailableTemplates" class="form-control">
+                                    </select>
+                                    <div class="input-group-append">
+                                        <a href="/Invoices/Preview" target="_blank" class="btn btn-outline-info" title="Preview templates">
+                                            <i class="fas fa-eye"></i> Preview Templates
+                                        </a>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="Input.TemplateType" class="text-danger"></span>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-palette"></i> Choose invoice design style
+                                </small>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <h5 class="mb-3"><i class="fas fa-university"></i> Bank Details <small class="text-muted">(Optional)</small></h5>
+
+                            <div class="form-group">
+                                <label asp-for="Input.BankName">Bank Name</label>
+                                <input asp-for="Input.BankName" class="form-control" placeholder="e.g., HDFC Bank" />
+                                <span asp-validation-for="Input.BankName" class="text-danger"></span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.AccountName">Account Name</label>
+                                        <input asp-for="Input.AccountName" class="form-control" />
+                                        <span asp-validation-for="Input.AccountName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.AccountNumber">Account Number</label>
+                                        <input asp-for="Input.AccountNumber" class="form-control" />
+                                        <span asp-validation-for="Input.AccountNumber" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.SwiftAddress">SWIFT Address</label>
+                                        <input asp-for="Input.SwiftAddress" class="form-control" placeholder="e.g., HDFCINBB" />
+                                        <span asp-validation-for="Input.SwiftAddress" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label asp-for="Input.IBANNumber">IBAN Number</label>
+                                        <input asp-for="Input.IBANNumber" class="form-control" />
+                                        <span asp-validation-for="Input.IBANNumber" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-0">
+                                <label asp-for="Input.Notes">Notes <small class="text-muted">(Optional)</small></label>
+                                <textarea asp-for="Input.Notes" class="form-control" rows="3"
+                                          placeholder="Additional notes for the invoice"></textarea>
+                                <span asp-validation-for="Input.Notes" class="text-danger"></span>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-save"></i> Update Invoice
+                                </button>
+                                <a asp-page="./View" asp-route-id="@Model.Input.Id" class="btn btn-info btn-lg">
+                                    <i class="fas fa-eye"></i> View Invoice
+                                </a>
+                                <a asp-page="./Index" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Show/hide paid date based on status
+        $(document).ready(function() {
+            function togglePaidDate() {
+                var status = $('#statusSelect').val();
+                if (status === 'Paid') {
+                    $('#paidDateGroup').show();
+                    if (!$('#paidDateInput').val()) {
+                        // Set to today if no date is set
+                        var today = new Date().toISOString().split('T')[0];
+                        $('#paidDateInput').val(today);
+                    }
+                } else {
+                    $('#paidDateGroup').hide();
+                    $('#paidDateInput').val('');
+                }
+            }
+
+            // Initial state
+            togglePaidDate();
+
+            // On change
+            $('#statusSelect').change(function() {
+                togglePaidDate();
+            });
+        });
+    </script>
+}

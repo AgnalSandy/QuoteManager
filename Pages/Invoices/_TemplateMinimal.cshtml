@@ -1,0 +1,130 @@
+﻿@model QuoteManager.Pages.Invoices.InvoicePageModelBase
+
+<div class="container my-5">
+    <div class="p-5" style="max-width: 900px; margin: 0 auto;">
+        <!-- Header -->
+        <div class="row mb-5">
+            <div class="col-6">
+                <h1 class="mb-3">INVOICE</h1>
+                <h5 class="mb-1">@Model.Company.CompanyName</h5>
+                <p class="small text-muted mb-0">
+                    @{
+                        var addressParts = new List<string>();
+                        if (!string.IsNullOrEmpty(Model.Company.AddressLine1))
+                        {
+                            addressParts.Add(Model.Company.AddressLine1);
+                        }
+                        if (!string.IsNullOrEmpty(Model.Company.AddressLine2) && 
+                            Model.Company.AddressLine2 != Model.Company.AddressLine1)
+                        {
+                            addressParts.Add(Model.Company.AddressLine2);
+                        }
+                    }
+                    @string.Join(", ", addressParts)@(addressParts.Any() ? ", " : "")@Model.Company.City, @Model.Company.State @Model.Company.PinCode<br />
+                    @Model.Company.Country<br />
+                    @if (!string.IsNullOrEmpty(Model.Company.PhoneNumber))
+                    {
+                        @Model.Company.PhoneNumber
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Company.Email))
+                    {
+                        if (!string.IsNullOrEmpty(Model.Company.PhoneNumber))
+                        {
+                            @: |
+                        }
+                        @Model.Company.Email
+                    }
+                </p>
+            </div>
+            <div class="col-6 text-end">
+                <h2 class="mb-3">@Model.Invoice.InvoiceNumber</h2>
+                <p class="mb-1"><strong>Date:</strong> @Model.Invoice.InvoiceDate.ToString("dd MMM yyyy")</p>
+                <p class="mb-1"><strong>Due:</strong> @Model.Invoice.DueDate.ToString("dd MMM yyyy")</p>
+                <p class="mb-0"><strong>Status:</strong> @Model.Invoice.Status.ToUpper()</p>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Bill To -->
+        <div class="mb-4">
+            <h6 class="mb-2">BILL TO:</h6>
+            <p class="mb-0">
+                <strong>@Model.Invoice.ClientName</strong><br />
+                @Model.Invoice.ClientEmail<br />
+                @Model.Invoice.ClientPhone
+            </p>
+        </div>
+
+        <!-- Items -->
+        <table class="table">
+            <thead>
+                <tr style="border-bottom: 2px solid #000;">
+                    <th>Description</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Rate</th>
+                    <th class="text-end">Tax</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Invoice.Items)
+                {
+                    var itemTotal = item.Amount + item.Taxes.Sum(t => t.TaxAmount);
+                    <tr>
+                        <td>
+                            @item.ServiceName<br />
+                            <small class="text-muted">@item.Description</small>
+                        </td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-end">₹@item.UnitPrice.ToString("N2")</td>
+                        <td class="text-end">₹@item.Taxes.Sum(t => t.TaxAmount).ToString("N2")</td>
+                        <td class="text-end"><strong>₹@itemTotal.ToString("N2")</strong></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="row mt-4">
+            <div class="col-7"></div>
+            <div class="col-5">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span>₹@Model.Invoice.SubTotal.ToString("N2")</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tax:</span>
+                    <span>₹@Model.Invoice.VATTotal.ToString("N2")</span>
+                </div>
+                @if (Model.Invoice.Discount > 0)
+                {
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Discount:</span>
+                        <span class="text-danger">-₹@Model.Invoice.Discount.ToString("N2")</span>
+                    </div>
+                }
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <h5>Total:</h5>
+                    <h5>₹@Model.Invoice.GrandTotal.ToString("N2")</h5>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank & Footer -->
+        @if (!string.IsNullOrEmpty(Model.Invoice.BankName))
+        {
+            <div class="mt-5 pt-4 border-top">
+                <h6>Payment Details</h6>
+                <p class="small mb-0">
+                    <strong>@Model.Invoice.BankName</strong> | Account: @Model.Invoice.AccountNumber
+                </p>
+            </div>
+        }
+
+        <div class="text-center mt-5 pt-4 border-top">
+            <p class="small text-muted">@Model.Company.FooterMessage</p>
+        </div>
+    </div>
+</div>

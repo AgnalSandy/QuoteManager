@@ -24,7 +24,24 @@ namespace QuoteManager.Pages.Users
         public async Task<IActionResult> OnGetAsync()
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            
+            // Safety check - if we can't get current user, redirect to login
+            if (currentUser == null && (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Staff)))
+            {
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
             var users = await _userManager.Users.ToListAsync();
+
+            // Get list of Staff IDs created by current Admin (for hierarchical filtering)
+            List<string> myStaffIds = new List<string>();
+            if (User.IsInRole(Roles.Admin) && currentUser != null)
+            {
+                myStaffIds = await _userManager.Users
+                    .Where(u => u.CreatedById == currentUser.Id)
+                    .Select(u => u.Id)
+                    .ToListAsync();
+            }
 
             foreach (var user in users)
             {
@@ -37,15 +54,29 @@ namespace QuoteManager.Pages.Users
                     continue;
                 }
 
-                // If current user is Admin or Staff, only show users they created
-                if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                // Role-based filtering
+                if (User.IsInRole(Roles.Admin))
                 {
-                    if (user.CreatedById != currentUser?.Id)
+                    // Admin can see:
+                    // 1. Staff they created (user.CreatedById == Admin.Id)
+                    // 2. Clients created by their Staff (user.CreatedById in myStaffIds)
+                    
+                    bool isMyStaff = (role == Roles.Staff && user.CreatedById == currentUser?.Id);
+                    bool isMyStaffClient = (role == Roles.Client && user.CreatedById != null && myStaffIds.Contains(user.CreatedById));
+                    
+                    if (!isMyStaff && !isMyStaffClient)
                     {
-                        continue; // Skip users not created by this Admin/Staff
+                        continue; // Skip users not in Admin's hierarchy
                     }
                 }
-
+                else if (User.IsInRole(Roles.Staff))
+                {
+                    // Staff can only see Clients they personally created
+                    if (role != Roles.Client || user.CreatedById != currentUser?.Id)
+                    {
+                        continue; // Skip users that are not Clients created by this Staff
+                    }
+                }
                 // SuperAdmin sees all users (except other SuperAdmins)
 
                 Users.Add(new UserViewModel

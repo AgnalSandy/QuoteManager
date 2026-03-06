@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using QuoteManager.Constants;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuoteManager.Models
@@ -19,7 +20,18 @@ namespace QuoteManager.Models
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Amount { get; set; }
+        [Display(Name = "Sub Total (₹)")]
+        public decimal SubTotal { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        [Display(Name = "Total Tax (₹)")]
+        public decimal TotalTax { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        [Display(Name = "Grand Total (₹)")]
+        public decimal GrandTotal { get; set; }
 
         [Required]
         public string Status { get; set; } = QuoteStatus.Pending;
@@ -41,13 +53,12 @@ namespace QuoteManager.Models
 
         [ForeignKey("ClientId")]
         public ApplicationUser? Client { get; set; }
-    }
 
-    public static class QuoteStatus
-    {
-        public const string Pending = "Pending";
-        public const string Accepted = "Accepted";
-        public const string Rejected = "Rejected";
-        public const string Expired = "Expired";
-    }
-}
+        // Concurrency control
+        [Timestamp]
+        public byte[]? RowVersion { get; set; }
+
+        // ⭐ Navigation property - MUST be inside the Quote class
+        public ICollection<QuoteItem> QuoteItems { get; set; } = new List<QuoteItem>();
+    } // ⭐ This closes the Quote class
+} // ⭐ This closes the namespace

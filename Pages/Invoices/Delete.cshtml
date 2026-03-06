@@ -1,0 +1,118 @@
+@page
+@model QuoteManager.Pages.Invoices.DeleteModel
+@{
+    ViewData["Title"] = "Delete Invoice";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Delete Invoice</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-page="./Index">Invoices</a></li>
+                    <li class="breadcrumb-item active">Delete</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <!-- Warning Alert -->
+                <div class="alert alert-danger">
+                    <h5><i class="icon fas fa-ban"></i> Warning!</h5>
+                    Are you sure you want to delete this invoice? This action cannot be undone.
+                </div>
+
+                <!-- Invoice Details Card -->
+                <div class="card card-danger">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-file-invoice"></i> Invoice Details
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Invoice Number</dt>
+                            <dd class="col-sm-8">
+                                <strong>@Model.Invoice.InvoiceNumber</strong>
+                            </dd>
+
+                            <dt class="col-sm-4">Client</dt>
+                            <dd class="col-sm-8">@Model.Invoice.Client.FullName</dd>
+
+                            <dt class="col-sm-4">Related Quote</dt>
+                            <dd class="col-sm-8">
+                                @Model.Invoice.Quote.QuoteNumber
+                            </dd>
+
+                            <dt class="col-sm-4">Invoice Date</dt>
+                            <dd class="col-sm-8">@Model.Invoice.InvoiceDate.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Due Date</dt>
+                            <dd class="col-sm-8">@Model.Invoice.DueDate.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Amount</dt>
+                            <dd class="col-sm-8">
+                                <strong class="text-danger">@Model.Invoice.GrandTotal.ToString("C")</strong>
+                            </dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.Invoice.Status == QuoteManager.Constants.InvoiceStatus.Unpaid)
+                                {
+                                    <span class="badge badge-warning">Unpaid</span>
+                                }
+                                else if (Model.Invoice.Status == QuoteManager.Constants.InvoiceStatus.Paid)
+                                {
+                                    <span class="badge badge-success">Paid</span>
+                                }
+                                else if (Model.Invoice.Status == QuoteManager.Constants.InvoiceStatus.PartiallyPaid)
+                                {
+                                    <span class="badge badge-info">Partially Paid</span>
+                                }
+                                else if (Model.Invoice.Status == QuoteManager.Constants.InvoiceStatus.Overdue)
+                                {
+                                    <span class="badge badge-danger">Overdue</span>
+                                }
+                                else if (Model.Invoice.Status == QuoteManager.Constants.InvoiceStatus.Cancelled)
+                                {
+                                    <span class="badge badge-secondary">Cancelled</span>
+                                }
+                            </dd>
+
+                            @if (Model.Invoice.PreparedBy != null)
+                            {
+                                <dt class="col-sm-4">Prepared By</dt>
+                                <dd class="col-sm-8">@Model.Invoice.PreparedBy.FullName</dd>
+                            }
+                        </dl>
+                    </div>
+                    <div class="card-footer">
+                        <form method="post">
+                            <input type="hidden" asp-for="Invoice.Id" />
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Yes, Delete Invoice
+                            </button>
+                            <a asp-page="./Index" class="btn btn-default">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

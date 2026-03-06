@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using QuoteManager.Constants;
 using QuoteManager.Data;
 using QuoteManager.Models;
 using System.Collections.Generic;
@@ -38,6 +39,15 @@ namespace QuoteManager.Pages.Client
         public decimal TotalQuoteValue { get; set; }
         public decimal AcceptedValue { get; set; }
         public decimal PendingValue { get; set; }
+
+        // Invoice properties
+        public List<Invoice> MyInvoices { get; set; } = new List<Invoice>();
+        public int TotalInvoices { get; set; }
+        public int PaidInvoices { get; set; }
+        public int UnpaidInvoices { get; set; }
+        public decimal TotalInvoiceAmount { get; set; }
+        public decimal PaidAmount { get; set; }
+        public decimal UnpaidAmount { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -83,9 +93,28 @@ namespace QuoteManager.Pages.Client
             AcceptedQuotes = allMyQuotes.Count(q => q.Status == QuoteStatus.Accepted);
             RejectedQuotes = allMyQuotes.Count(q => q.Status == QuoteStatus.Rejected);
 
-            TotalQuoteValue = allMyQuotes.Sum(q => q.Amount);
-            AcceptedValue = allMyQuotes.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => q.Amount);
-            PendingValue = allMyQuotes.Where(q => q.Status == QuoteStatus.Pending).Sum(q => q.Amount);
+            TotalQuoteValue = allMyQuotes.Sum(q => q.GrandTotal);
+            AcceptedValue = allMyQuotes.Where(q => q.Status == QuoteStatus.Accepted).Sum(q => q.GrandTotal);
+            PendingValue = allMyQuotes.Where(q => q.Status == QuoteStatus.Pending).Sum(q => q.GrandTotal);
+
+            // Get MY invoices
+            var allMyInvoices = await _context.Invoices
+                .Where(i => i.ClientId == CurrentClient.Id)
+                .ToListAsync();
+
+            TotalInvoices = allMyInvoices.Count;
+            PaidInvoices = allMyInvoices.Count(i => i.IsPaid);
+            UnpaidInvoices = allMyInvoices.Count(i => !i.IsPaid);
+            TotalInvoiceAmount = allMyInvoices.Sum(i => i.GrandTotal);
+            PaidAmount = allMyInvoices.Where(i => i.IsPaid).Sum(i => i.GrandTotal);
+            UnpaidAmount = allMyInvoices.Where(i => !i.IsPaid).Sum(i => i.GrandTotal);
+
+            MyInvoices = await _context.Invoices
+                .Where(i => i.ClientId == CurrentClient.Id)
+                .OrderByDescending(i => i.InvoiceDate)
+                .Include(i => i.Quote)
+                .Take(5)
+                .ToListAsync();
         }
     }
 }

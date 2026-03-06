@@ -12,10 +12,12 @@ namespace QuoteManager.Pages.Users
     public class CreateModel : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<CreateModel> _logger;
 
-        public CreateModel(UserManager<ApplicationUser> userManager)
+        public CreateModel(UserManager<ApplicationUser> userManager, ILogger<CreateModel> logger)
         {
             _userManager = userManager;
+            _logger = logger;
         }
 
         [BindProperty]
@@ -60,10 +62,28 @@ namespace QuoteManager.Pages.Users
 
             if (result.Succeeded)
             {
+                _logger.LogInformation("User {Email} created successfully", Input.Email);
+                
                 // Assign role
-                await _userManager.AddToRoleAsync(user, Input.Role);
-
-                TempData["Success"] = $"User {Input.FullName} created successfully!";
+                var roleResult = await _userManager.AddToRoleAsync(user, Input.Role);
+                
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogError("Failed to assign role {Role} to user {Email}", Input.Role, Input.Email);
+                    foreach (var error in roleResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, $"Role assignment error: {error.Description}");
+                    }
+                    
+                    // Delete the user since role assignment failed
+                    await _userManager.DeleteAsync(user);
+                    AvailableRoles = GetAvailableRolesForCurrentUser();
+                    return Page();
+                }
+                
+                _logger.LogInformation("Role {Role} assigned to user {Email}", Input.Role, Input.Email);
+                
+                TempData["Success"] = $"User {Input.FullName} created successfully with role {Input.Role}!";
                 return RedirectToPage("Index");
             }
 

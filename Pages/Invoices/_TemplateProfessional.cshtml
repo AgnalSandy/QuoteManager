@@ -1,0 +1,449 @@
+﻿@model QuoteManager.Pages.Invoices.InvoicePageModelBase
+
+@functions {
+    public static string ConvertToWords(decimal number)
+    {
+        if (number == 0) return "Zero";
+        
+        string[] ones = { "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen" };
+        string[] tens = { "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety" };
+        
+        int num = (int)number;
+        if (num < 20) return ones[num];
+        if (num < 100) return tens[num / 10] + (num % 10 > 0 ? " " + ones[num % 10] : "");
+        if (num < 1000) return ones[num / 100] + " Hundred" + (num % 100 > 0 ? " " + ConvertToWords(num % 100) : "");
+        if (num < 100000) return ConvertToWords(num / 1000) + " Thousand" + (num % 1000 > 0 ? " " + ConvertToWords(num % 1000) : "");
+        if (num < 10000000) return ConvertToWords(num / 100000) + " Lakh" + (num % 100000 > 0 ? " " + ConvertToWords(num % 100000) : "");
+        return ConvertToWords(num / 10000000) + " Crore" + (num % 10000000 > 0 ? " " + ConvertToWords(num % 10000000) : "");
+    }
+}
+
+<style>
+    .invoice-border {
+        border: 2px solid #e5e7eb;
+        max-width: 1000px;
+        margin: 0 auto;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .info-box {
+        border: 1px solid #d1d5db;
+        padding: 12px 15px;
+        min-height: 110px;
+        background-color: #fafafa;
+        border-radius: 4px;
+    }
+    .info-box-title {
+        font-weight: bold;
+        border-bottom: 2px solid #6b7280;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+        color: #374151;
+        font-size: 0.9rem;
+    }
+    .info-label {
+        display: inline-block;
+        width: 100px;
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+    .info-box table tr {
+        line-height: 1.3;
+    }
+    .info-box table td {
+        padding: 2px 5px;
+        font-size: 0.85rem;
+    }
+    .table-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+    }
+    .invoice-table {
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        font-size: 0.9rem;
+    }
+    .invoice-table tbody tr {
+        height: 45px;
+    }
+    .invoice-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+    .invoice-table th, .invoice-table td {
+        padding: 8px 10px;
+        vertical-align: middle;
+    }
+    .totals-box {
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 10px 12px;
+        background-color: #f9fafb;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .totals-box table tr td {
+        padding: 4px 10px !important;
+        font-size: 0.9rem;
+    }
+    .signature-line {
+        border-top: 2px solid #374151;
+        padding-top: 3px;
+        margin-top: 40px;
+        font-weight: 600;
+    }
+    .receiver-box {
+        border: 1px solid #6b7280;
+        border-radius: 4px;
+        padding: 10px 12px;
+        background-color: #fafafa;
+    }
+    .bank-details-box {
+        border: 1px solid #6b7280;
+        border-radius: 4px;
+        padding: 10px 12px;
+        background-color: #fafafa;
+    }
+    .compact-text {
+        line-height: 1.3;
+        margin-bottom: 2px;
+    }
+</style>
+
+<div class="container my-4">
+    <div class="p-3 invoice-border">
+        <!-- Compact Header Section - Aligned Horizontally -->
+        <div class="row mb-2 align-items-center">
+            <!-- LEFT: Company Logo -->
+            <div class="col-2">
+                @if (!string.IsNullOrEmpty(Model.Company.LogoPath))
+                {
+                    <img src="@Model.Company.LogoPath" alt="@Model.Company.CompanyName" 
+                         style="max-height: 70px; max-width: 100%; object-fit: contain;" />
+                }
+                else
+                {
+                    <div style="width: 70px; height: 70px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.7rem;">
+                        <small class="text-muted">Logo</small>
+                    </div>
+                }
+            </div>
+            
+            <!-- CENTER: Company Details -->
+            <div class="col-7 text-center">
+                <h4 class="mb-1" style="font-weight: 700; color: #1f2937; letter-spacing: 0.3px; font-size: 1.3rem;">
+                    @Model.Company.CompanyName.ToUpper()
+                </h4>
+                <p class="compact-text small mb-0" style="color: #6b7280; font-size: 0.8rem;">
+                    @{
+                        var addressParts = new List<string>();
+                        if (!string.IsNullOrEmpty(Model.Company.AddressLine1))
+                        {
+                            addressParts.Add(Model.Company.AddressLine1);
+                        }
+                        if (!string.IsNullOrEmpty(Model.Company.AddressLine2) && 
+                            Model.Company.AddressLine2 != Model.Company.AddressLine1)
+                        {
+                            addressParts.Add(Model.Company.AddressLine2);
+                        }
+                        if (addressParts.Any())
+                        {
+                            @string.Join(", ", addressParts)<text>, </text>
+                        }
+                    }@Model.Company.City, @Model.Company.State @Model.Company.PinCode, @Model.Company.Country
+                </p>
+                <p class="compact-text small mb-0" style="color: #6b7280; font-size: 0.75rem;">
+                    @if (!string.IsNullOrEmpty(Model.Company.PhoneNumber))
+                    {
+                        <span>@Model.Company.PhoneNumber</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Company.Email))
+                    {
+                        if (!string.IsNullOrEmpty(Model.Company.PhoneNumber))
+                        {
+                            <span> | </span>
+                        }
+                        <span>@Model.Company.Email</span>
+                    }
+                </p>
+            </div>
+            
+            <!-- RIGHT: Invoice Info + QR (Compact) -->
+            <div class="col-3 text-end">
+                <div class="d-flex align-items-center justify-content-end">
+                    <div class="me-2">
+                        <h3 class="mb-0" style="font-weight: 700; color: #667eea; font-size: 1.4rem;">INVOICE</h3>
+                        <div class="small text-muted" style="font-size: 0.7rem;">Quotation Invoice</div>
+                    </div>
+                    <div style="width: 65px; height: 65px; border: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; border-radius: 4px; background-color: #f9fafb;">
+                        <small class="text-muted" style="font-size: 0.65rem;">QR</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-2" style="border-top: 1px solid #e5e7eb;" />
+
+        <!-- Compact Customer & Invoice Details Boxes -->
+        <div class="row mb-2">
+            <div class="col-6 pe-1">
+                <div class="info-box h-100">
+                    <div class="info-box-title">Customer Details</div>
+                    <table class="table table-borderless table-sm mb-0">
+                        <tr>
+                            <td class="info-label">Customer</td>
+                            <td>: <strong>@Model.Invoice.ClientName</strong></td>
+                        </tr>
+                        @if (!string.IsNullOrEmpty(Model.Invoice.ClientPhone))
+                        {
+                            <tr>
+                                <td class="info-label">Phone</td>
+                                <td>: @Model.Invoice.ClientPhone</td>
+                            </tr>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Invoice.ClientEmail))
+                        {
+                            <tr>
+                                <td class="info-label">Email</td>
+                                <td>: @Model.Invoice.ClientEmail</td>
+                            </tr>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Company.GSTNumber))
+                        {
+                            <tr>
+                                <td class="info-label">GST/TRN</td>
+                                <td>: @Model.Company.GSTNumber</td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            </div>
+            <div class="col-6 ps-1">
+                <div class="info-box h-100">
+                    <div class="row">
+                        <div class="col-9">
+                            <div class="info-box-title">Invoice Details</div>
+                            <table class="table table-borderless table-sm mb-0">
+                                <tr>
+                                    <td class="info-label" style="width: 85px;">Invoice No</td>
+                                    <td>: <strong>@Model.Invoice.InvoiceNumber</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="info-label">Date</td>
+                                    <td>: @Model.Invoice.InvoiceDate.ToString("dd-MM-yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <td class="info-label">Due Date</td>
+                                    <td>: @Model.Invoice.DueDate.ToString("dd-MM-yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <td class="info-label">Status</td>
+                                    <td>: 
+                                        @if (Model.Invoice.Status == "Paid")
+                                        {
+                                            <span class="badge bg-success" style="font-size: 0.7rem;">PAID</span>
+                                        }
+                                        else if (Model.Invoice.Status == "Unpaid")
+                                        {
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">UNPAID</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary" style="font-size: 0.7rem;">@Model.Invoice.Status.ToUpper()</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-3 text-center">
+                            <div style="width: 55px; height: 55px; border: 1px solid #d1d5db; margin: 20px auto 0; display: flex; align-items: center; justify-content: center; border-radius: 3px; background-color: white; font-size: 0.65rem;">
+                                <small class="text-muted">QR</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Items Table -->
+        <div class="table-responsive mb-2">
+            <table class="table table-bordered invoice-table mb-0">
+                <thead class="table-header-custom">
+                    <tr>
+                        <th class="text-center" style="width: 4%;">No</th>
+                        <th style="width: 42%;">Description</th>
+                        <th class="text-end" style="width: 12%;">Amount</th>
+                        <th class="text-center" style="width: 7%;">Qty</th>
+                        <th class="text-end" style="width: 11%;">VAT Amt</th>
+                        <th class="text-end" style="width: 9%;">VAT %</th>
+                        <th class="text-end" style="width: 13%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var serialNo = 1;
+                    }
+                    @foreach (var item in Model.Invoice.Items)
+                    {
+                        var itemTotal = item.Amount + item.Taxes.Sum(t => t.TaxAmount);
+                        <tr>
+                            <td class="text-center align-middle">@serialNo</td>
+                            <td class="align-middle">
+                                <div style="font-weight: 600; color: #374151; font-size: 0.9rem;">@item.ServiceName</div>
+                                <div class="small text-muted" style="line-height: 1.2; font-size: 0.8rem;">@item.Description</div>
+                            </td>
+                            <td class="text-end align-middle" style="font-family: 'Courier New', monospace; font-size: 0.85rem;">₹@item.UnitPrice.ToString("N2")</td>
+                            <td class="text-center align-middle" style="font-weight: 600;">@item.Quantity</td>
+                            <td class="text-end align-middle" style="font-family: 'Courier New', monospace; font-size: 0.85rem;">₹@item.Taxes.Sum(t => t.TaxAmount).ToString("N2")</td>
+                            <td class="text-end align-middle" style="font-size: 0.85rem;">@(item.Taxes.Any() ? item.Taxes.First().TaxPercentage.ToString("0.00") : "0.00")%</td>
+                            <td class="text-end align-middle" style="font-weight: 600; font-family: 'Courier New', monospace; font-size: 0.9rem;">₹@itemTotal.ToString("N2")</td>
+                        </tr>
+                        serialNo++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Compact Remarks & Totals Section -->
+        <div class="row mb-2">
+            <div class="col-7">
+                @if (!string.IsNullOrEmpty(Model.Invoice.Notes))
+                {
+                    <div class="p-2" style="background-color: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 3px; font-size: 0.85rem;">
+                        <strong style="color: #92400e;">Remarks:</strong>
+                        <span class="small" style="color: #78350f;">@Model.Invoice.Notes</span>
+                    </div>
+                }
+            </div>
+            <div class="col-5">
+                <div class="totals-box">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-end" style="color: #6b7280; font-weight: 500;">Sub Total</td>
+                            <td class="text-end" style="font-family: 'Courier New', monospace; font-weight: 600;">₹@Model.Invoice.SubTotal.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td class="text-end" style="color: #6b7280; font-weight: 500;">VAT Total</td>
+                            <td class="text-end" style="font-family: 'Courier New', monospace; font-weight: 600;">₹@Model.Invoice.VATTotal.ToString("N2")</td>
+                        </tr>
+                        @if (Model.Invoice.Discount > 0)
+                        {
+                            <tr>
+                                <td class="text-end" style="color: #6b7280; font-weight: 500;">Discount</td>
+                                <td class="text-end text-danger" style="font-family: 'Courier New', monospace; font-weight: 600;">-₹@Model.Invoice.Discount.ToString("N2")</td>
+                            </tr>
+                        }
+                        <tr style="border-top: 2px solid #667eea;">
+                            <td class="text-end">
+                                <strong style="font-size: 1rem; color: #374151;">GRAND TOTAL</strong>
+                            </td>
+                            <td class="text-end">
+                                <strong style="font-size: 1.1rem; color: #667eea; font-family: 'Courier New', monospace;">₹@Model.Invoice.GrandTotal.ToString("N2")</strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="text-end small mt-1 fst-italic" style="color: #6b7280; font-size: 0.75rem;">
+                    <strong>In Words:</strong> @ConvertToWords(Model.Invoice.GrandTotal) Rupees Only
+                </div>
+            </div>
+        </div>
+
+        <hr style="border-top: 1px solid #e5e7eb; margin: 15px 0;" />
+
+        <!-- Compact Bottom Section -->
+        <div class="row mb-2">
+            <div class="col-6">
+                <div class="receiver-box">
+                    <h6 class="mb-2" style="font-weight: 600; color: #374151; font-size: 0.9rem;">Receiver Details</h6>
+                    <div class="mb-1" style="font-size: 0.8rem;">
+                        <span style="color: #6b7280;">Name:</span> 
+                        <span style="border-bottom: 1px solid #d1d5db; display: inline-block; width: 180px; margin-left: 8px;"></span>
+                    </div>
+                    <div style="font-size: 0.8rem;">
+                        <span style="color: #6b7280;">Sign:</span> 
+                        <span style="border-bottom: 1px solid #d1d5db; display: inline-block; width: 180px; margin-left: 14px;"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="text-end">
+                    <p class="mb-0 compact-text" style="color: #6b7280; font-size: 0.8rem;">For</p>
+                    <h6 class="mb-2" style="font-weight: 700; color: #374151; font-size: 1rem;">@Model.Company.CompanyName</h6>
+                    <div class="signature-line text-center" style="margin-top: 25px; padding-top: 3px;">
+                        <small style="color: #6b7280; font-size: 0.75rem;">Authorized Signatory</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compact Bank Details -->
+        @if (!string.IsNullOrEmpty(Model.Invoice.BankName))
+        {
+            <div class="bank-details-box mb-2">
+                <h6 class="mb-2" style="font-weight: 600; color: #374151; font-size: 0.9rem;">
+                    <i class="bi bi-bank2"></i> Payment Information
+                </h6>
+                <div class="row" style="font-size: 0.8rem;">
+                    <div class="col-6">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tr>
+                                <td style="width: 40%; color: #6b7280; font-weight: 500; padding: 1px 5px;">Bank Name:</td>
+                                <td style="font-weight: 600; padding: 1px 5px;">@Model.Invoice.BankName</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.Invoice.AccountName))
+                            {
+                                <tr>
+                                    <td style="color: #6b7280; font-weight: 500; padding: 1px 5px;">Account Name:</td>
+                                    <td style="font-weight: 600; padding: 1px 5px;">@Model.Invoice.AccountName</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Invoice.AccountNumber))
+                            {
+                                <tr>
+                                    <td style="color: #6b7280; font-weight: 500; padding: 1px 5px;">Account No:</td>
+                                    <td style="font-family: 'Courier New', monospace; font-weight: 600; padding: 1px 5px;">@Model.Invoice.AccountNumber</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                    <div class="col-6">
+                        <table class="table table-borderless table-sm mb-0">
+                            @if (!string.IsNullOrEmpty(Model.Invoice.SwiftAddress))
+                            {
+                                <tr>
+                                    <td style="width: 40%; color: #6b7280; font-weight: 500; padding: 1px 5px;">SWIFT:</td>
+                                    <td style="font-weight: 600; padding: 1px 5px;">@Model.Invoice.SwiftAddress</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Invoice.IBANNumber))
+                            {
+                                <tr>
+                                    <td style="color: #6b7280; font-weight: 500; padding: 1px 5px;">IBAN:</td>
+                                    <td style="font-family: 'Courier New', monospace; font-weight: 600; padding: 1px 5px;">@Model.Invoice.IBANNumber</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Compact Footer -->
+        <div class="text-center pt-2" style="border-top: 1px solid #e5e7eb; margin-top: 10px;">
+            <p class="mb-0 compact-text" style="color: #6b7280; font-style: italic; font-size: 0.8rem;">
+                @if (!string.IsNullOrEmpty(Model.Company.FooterMessage))
+                {
+                    @Model.Company.FooterMessage
+                }
+                else
+                {
+                    <span>Thank you for your business!</span>
+                }
+            </p>
+            <p class="compact-text text-muted mb-0" style="font-size: 0.7rem;">
+                Generated on @DateTime.Now.ToString("dd MMM yyyy HH:mm") | Computer-generated invoice
+            </p>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-## ASP.NET Core - QuoteManager Project
+## ASP.NET Core - QuoteManager Project (Enterprise Edition)
 
 # User-specific files
 *.suo
@@ -21,6 +21,10 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Log files
+logs/
+*.log
+
 # Visual Studio cache/options directory
 .vs/
 
@@ -40,22 +44,6 @@ bld/
 
 # Mono auto generated files
 mono_crash.*
-
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
 
 # Visual Studio profiler
 *.psess
@@ -83,11 +71,8 @@ _ReSharper*/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
-# Entity Framework Migrations (COMMENTED - Keep migrations tracked)
+# Entity Framework Migrations (Keep migrations tracked)
 # Migrations/
-
-# Publish profiles (IMPORTANT: Keep these for reference)
-# PublishProfiles/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -98,6 +83,32 @@ ScaffoldingReadMe.txt
 *.ndf
 *.db
 *.sqlite
+
+# Environment files
+.env
+.env.local
+.env.production
+appsettings.Production.json
+appsettings.Staging.json
+
+# Secrets
+**/appsettings.secrets.json
+secrets.json
+
+# Docker
+docker-compose.override.yml
+
+# Uploaded files
+wwwroot/uploads/**
+!wwwroot/uploads/.gitkeep
+
+# Coverage reports
+coverage/
+*.coverage
+*.coveragexml
+
+# Benchmark results
+BenchmarkDotNet.Artifacts/
 *.sqlite3
 
 # SQL Server files

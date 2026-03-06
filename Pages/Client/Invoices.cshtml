@@ -1,0 +1,141 @@
+@page
+@model QuoteManager.Pages.Client.InvoicesModel
+@{
+    ViewData["Title"] = "My Invoices";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-file-invoice-dollar"></i> My Invoices</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a asp-page="/Client/Dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item active">My Invoices</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+
+            @if (Model.Invoices.Any())
+            {
+                <div class="row">
+                    @foreach (var invoice in Model.Invoices)
+                    {
+                        <div class="col-md-6">
+                            <div class="card @(invoice.Status == "Paid" ? "card-success" : invoice.Status == "Unpaid" ? "card-warning" : "card-danger") card-outline">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <strong>@invoice.InvoiceNumber</strong>
+                                    </h3>
+                                    <div class="card-tools">
+                                        @if (invoice.Status == "Paid")
+                                        {
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-check"></i> Paid
+                                            </span>
+                                        }
+                                        else if (invoice.Status == "Unpaid")
+                                        {
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-clock"></i> Unpaid
+                                            </span>
+                                        }
+                                        else if (invoice.Status == "Overdue")
+                                        {
+                                            <span class="badge badge-danger">
+                                                <i class="fas fa-exclamation-triangle"></i> Overdue
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-4">Quote:</dt>
+                                        <dd class="col-sm-8">
+                                            @invoice.Quote.QuoteNumber - @invoice.Quote.Title
+                                        </dd>
+
+                                        <dt class="col-sm-4">Amount:</dt>
+                                        <dd class="col-sm-8">
+                                            <h4 class="text-success mb-0">₹@invoice.GrandTotal.ToString("N2")</h4>
+                                        </dd>
+
+                                        <dt class="col-sm-4">Invoice Date:</dt>
+                                        <dd class="col-sm-8">@invoice.InvoiceDate.ToString("MMMM dd, yyyy")</dd>
+
+                                        <dt class="col-sm-4">Due Date:</dt>
+                                        <dd class="col-sm-8">
+                                            @invoice.DueDate.ToString("MMMM dd, yyyy")
+                                            @if (invoice.DueDate < DateTime.UtcNow && invoice.Status != "Paid")
+                                            {
+                                                <span class="badge badge-danger">Overdue</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-4">Template:</dt>
+                                        <dd class="col-sm-8">
+                                            <span class="badge badge-info">@invoice.TemplateType</span>
+                                        </dd>
+
+                                        @if (!string.IsNullOrEmpty(invoice.Notes))
+                                        {
+                                            <dt class="col-sm-4">Notes:</dt>
+                                            <dd class="col-sm-8">@invoice.Notes</dd>
+                                        }
+                                    </dl>
+
+                                    @if (!string.IsNullOrEmpty(invoice.AccountNumber))
+                                    {
+                                        <hr />
+                                        <h6 class="text-muted">Payment Details:</h6>
+                                        <dl class="row mb-0 small">
+                                            <dt class="col-sm-4">Bank:</dt>
+                                            <dd class="col-sm-8">@invoice.BankName</dd>
+                                            <dt class="col-sm-4">Account Name:</dt>
+                                            <dd class="col-sm-8">@invoice.AccountName</dd>
+                                            <dt class="col-sm-4">Account No:</dt>
+                                            <dd class="col-sm-8"><strong>@invoice.AccountNumber</strong></dd>
+                                        </dl>
+                                    }
+                                </div>
+                                <div class="card-footer">
+                                    <a asp-page="/Invoices/View" asp-route-id="@invoice.Id" class="btn btn-primary btn-sm" target="_blank">
+                                        <i class="fas fa-file-pdf"></i> View Invoice
+                                    </a>
+                                    @if (invoice.Status == "Unpaid" || invoice.Status == "Overdue")
+                                    {
+                                        <button class="btn btn-success btn-sm" disabled>
+                                            <i class="fas fa-credit-card"></i> Pay Now (Coming Soon)
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No invoices found</h4>
+                        <p class="text-muted">Invoices will appear here once your accepted quotes are converted to invoices.</p>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </section>
+</div>

@@ -130,15 +130,28 @@ namespace QuoteManager.Areas.Identity.Pages.Account
                     {
                         var roles = await _userManager.GetRolesAsync(user);
 
-                        // Redirect Client to their dashboard
+                        // Redirect Client to their dashboard - ignore returnUrl for clients
                         if (roles.Contains("Client"))
                         {
+                            _logger.LogInformation("Redirecting Client user to their dashboard");
+                            // Refresh sign-in to ensure claims are updated
+                            await _signInManager.RefreshSignInAsync(user);
                             return RedirectToPage("/Client/Dashboard");
                         }
                         // Redirect Admin/Staff to admin dashboard
                         else if (roles.Contains("SuperAdmin") || roles.Contains("Admin") || roles.Contains("Staff"))
                         {
+                            _logger.LogInformation("Redirecting Staff/Admin user to dashboard");
+                            await _signInManager.RefreshSignInAsync(user);
                             return RedirectToPage("/Dashboard/Index");
+                        }
+                        else
+                        {
+                            // User has no recognized role - this shouldn't happen
+                            _logger.LogWarning("User {Email} has no recognized role", Input.Email);
+                            await _signInManager.SignOutAsync();
+                            ModelState.AddModelError(string.Empty, "Your account has not been properly configured. Please contact support.");
+                            return Page();
                         }
                     }
 

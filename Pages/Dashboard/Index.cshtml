@@ -69,7 +69,7 @@
                         <div class="icon">
                             <i class="fas fa-users"></i>
                         </div>
-                        <a href="/Users/Index" class="small-box-footer">
+                        <a asp-page="/Users/Index" class="small-box-footer">
                             View Users <i class="fas fa-arrow-circle-right"></i>
                         </a>
                     </div>
@@ -98,40 +98,42 @@
                         <div class="icon">
                             <i class="fas fa-file-invoice-dollar"></i>
                         </div>
-                        <a href="#" class="small-box-footer">
+                        <a asp-page="/Quotes/Index" class="small-box-footer">
                             View Quotes <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Invoices Card -->
+                <div class="col-lg-3 col-6">
+                    <div class="small-box bg-warning">
+                        <div class="inner">
+                            <h3>@Model.TotalInvoices</h3>
+                            <p>Total Invoices</p>
+                            <small>@Model.UnpaidInvoices Unpaid</small>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <a asp-page="/Invoices/Index" class="small-box-footer">
+                            View Invoices <i class="fas fa-arrow-circle-right"></i>
                         </a>
                     </div>
                 </div>
 
                 <!-- Revenue Card -->
                 <div class="col-lg-3 col-6">
-                    <div class="small-box bg-warning">
+                    <div class="small-box bg-danger">
                         <div class="inner">
-                            <h3>@Model.TotalRevenue.ToString("C")</h3>
-                            <p>Total Revenue</p>
+                            <h3>@Model.PaidAmount.ToString("C0")</h3>
+                            <p>Paid Revenue</p>
+                            <small>@Model.UnpaidAmount.ToString("C0") Pending</small>
                         </div>
                         <div class="icon">
                             <i class="fas fa-dollar-sign"></i>
                         </div>
-                        <a href="#" class="small-box-footer">
+                        <a asp-page="/Invoices/Index" class="small-box-footer">
                             View Details <i class="fas fa-arrow-circle-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Average Quote Card -->
-                <div class="col-lg-3 col-6">
-                    <div class="small-box bg-danger">
-                        <div class="inner">
-                            <h3>@Model.AverageQuoteValue.ToString("C")</h3>
-                            <p>Average Quote</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <a href="#" class="small-box-footer">
-                            Analysis <i class="fas fa-arrow-circle-right"></i>
                         </a>
                     </div>
                 </div>
@@ -328,6 +330,74 @@
                                         with @((Model.TotalQuotes > 0 ? (Model.AcceptedQuotes * 100.0 / Model.TotalQuotes) : 0).ToString("F1"))% acceptance rate
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Quick Actions
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                        <a asp-page="/Users/Create" class="btn btn-app bg-success btn-lg w-100">
+                                            <i class="fas fa-user-plus fa-2x"></i>
+                                            <span class="d-block mt-2">Add User</span>
+                                        </a>
+                                    </div>
+                                }
+                                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                {
+                                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                        <a asp-page="/ServiceMasters/Create" class="btn btn-app bg-info btn-lg w-100">
+                                            <i class="fas fa-cogs fa-2x"></i>
+                                            <span class="d-block mt-2">Add Service</span>
+                                        </a>
+                                    </div>
+                                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                        <a asp-page="/TaxMasters/Create" class="btn btn-app bg-warning btn-lg w-100">
+                                            <i class="fas fa-percentage fa-2x"></i>
+                                            <span class="d-block mt-2">Add Tax</span>
+                                        </a>
+                                    </div>
+                                }
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a asp-page="/Quotes/Create" class="btn btn-app bg-primary btn-lg w-100">
+                                        <i class="fas fa-file-invoice-dollar fa-2x"></i>
+                                        <span class="d-block mt-2">Create Quote</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a asp-page="/Quotes/Index" class="btn btn-app bg-success btn-lg w-100">
+                                        <i class="fas fa-list fa-2x"></i>
+                                        <span class="d-block mt-2">All Quotes</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a asp-page="/Invoices/Index" class="btn btn-app bg-danger btn-lg w-100">
+                                        <i class="fas fa-file-invoice fa-2x"></i>
+                                        <span class="d-block mt-2">All Invoices</span>
+                                    </a>
+                                </div>
+                                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                {
+                                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                        <a asp-page="/CompanySettings/Edit" class="btn btn-app bg-secondary btn-lg w-100">
+                                            <i class="fas fa-building fa-2x"></i>
+                                            <span class="d-block mt-2">Company Settings</span>
+                                        </a>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
